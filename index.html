@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Шешбеш редактор</title>
+  <style>
+    :root {
+      --bg: #f5f1ea;
+      --panel: #ffffff;
+      --text: #1f1f1f;
+      --border: #d8d2c8;
+      --accent: #356d39;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .board-wrap {
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+      box-sizing: border-box;
+    }
+
+    .board-wrap svg {
+      width: 808px;
+      height: auto;
+      display: block;
+    }
+
+    svg text {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .point-label {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1;
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .actions button {
+      padding: 8px 12px;
+      border: 1px solid #b8b0a2;
+      border-radius: 6px;
+      background: #f7f3ea;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .actions button:hover {
+      background: #eee7d8;
+    }
+
+    .controls {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #ece7de;
+      border-radius: 8px;
+      background: #fcfbf8;
+      font-size: 14px;
+      user-select: none;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mode-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border: 1px solid #b8b0a2;
+      border-radius: 6px;
+      background: #f7f3ea;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .mode-btn.active {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+      background: #e9f4ea;
+    }
+
+    .checker-icon {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 2px solid #222;
+      display: inline-block;
+      box-sizing: border-box;
+    }
+
+    .checker-icon--white {
+      background: #ffffff;
+      border-color: #111;
+    }
+
+    .checker-icon--black {
+      background: #101018;
+      border-color: #c7a473;
+    }
+
+    .hover-zone {
+      fill: #fff;
+      opacity: 0;
+      cursor: inherit;
+      transition: opacity 120ms ease-out;
+    }
+
+    .hover-zone:hover {
+      opacity: 0.23;
+    }
+
+    .scale-input {
+      width: 70px;
+      padding: 5px 6px;
+      border: 1px solid #d5d0c7;
+      border-radius: 4px;
+    }
+
+    input[type="number"],
+    select {
+      padding: 4px 6px;
+      border: 1px solid #d5d0c7;
+      border-radius: 4px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="board-wrap" id="boardWrap">
+    <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="159 0 808 558" width="808" height="558">
+      <g id="boardContent">
+        <rect x="159" y="0" width="806" height="558" rx="20" ry="20" fill="#423122" stroke="#000" stroke-width="1"/>
+        <rect x="250" y="22" width="283" height="513" fill="#4a6439"/>
+        <rect x="591" y="22" width="283" height="513" fill="#4a6439"/>
+
+        <path d="M250 22 L272.583 208.667 A2 7.915 0 0 0 274.583 208.667 L297.167 22z" fill="#c9b797"/>
+        <path d="M297.167 22 L319.75 208.667 A2 7.915 0 0 0 321.75 208.667 L344.333 22z" fill="#f42"/>
+        <path d="M344.333 22 L366.917 208.667 A2 7.915 0 0 0 368.917 208.667 L391.5 22z" fill="#c9b797"/>
+        <path d="M391.5 22 L414.083 208.667 A2 7.915 0 0 0 416.083 208.667 L438.667 22z" fill="#f42"/>
+        <path d="M438.667 22 L461.25 208.667 A2 7.915 0 0 0 463.25 208.667 L485.833 22z" fill="#c9b797"/>
+        <path d="M485.833 22 L508.417 208.667 A2 7.915 0 0 0 510.417 208.667 L533 22z" fill="#f42"/>
+
+        <path d="M250 535 L272.583 348.333 A2 7.915 0 0 1 274.583 348.333 L297.167 535z" fill="#f42"/>
+        <path d="M297.167 535 L319.75 348.333 A2 7.915 0 0 1 321.75 348.333 L344.333 535z" fill="#c9b797"/>
+        <path d="M344.333 535 L366.917 348.333 A2 7.915 0 0 1 368.917 348.333 L391.5 535z" fill="#f42"/>
+        <path d="M391.5 535 L414.083 348.333 A2 7.915 0 0 1 416.083 348.333 L438.667 535z" fill="#c9b797"/>
+        <path d="M438.667 535 L461.25 348.333 A2 7.915 0 0 1 463.25 348.333 L485.833 535z" fill="#f42"/>
+        <path d="M485.833 535 L508.417 348.333 A2 7.915 0 0 1 510.417 348.333 L533 535z" fill="#c9b797"/>
+
+        <path d="M591 22 L613.583 208.667 A2 7.915 0 0 0 615.583 208.667 L638.167 22z" fill="#c9b797"/>
+        <path d="M638.167 22 L660.75 208.667 A2 7.915 0 0 0 662.75 208.667 L685.333 22z" fill="#f42"/>
+        <path d="M685.333 22 L707.917 208.667 A2 7.915 0 0 0 709.917 208.667 L732.5 22z" fill="#c9b797"/>
+        <path d="M732.5 22 L755.083 208.667 A2 7.915 0 0 0 757.083 208.667 L779.667 22z" fill="#f42"/>
+        <path d="M779.667 22 L802.25 208.667 A2 7.915 0 0 0 804.25 208.667 L826.833 22z" fill="#c9b797"/>
+        <path d="M826.833 22 L849.417 208.667 A2 7.915 0 0 0 851.417 208.667 L874 22z" fill="#f42"/>
+
+        <path d="M591 535 L613.583 348.333 A2 7.915 0 0 1 615.583 348.333 L638.167 535z" fill="#f42"/>
+        <path d="M638.167 535 L660.75 348.333 A2 7.915 0 0 1 662.75 348.333 L685.333 535z" fill="#c9b797"/>
+        <path d="M685.333 535 L707.917 348.333 A2 7.915 0 0 1 709.917 348.333 L732.5 535z" fill="#f42"/>
+        <path d="M732.5 535 L755.083 348.333 A2 7.915 0 0 1 757.083 348.333 L779.667 535z" fill="#c9b797"/>
+        <path d="M779.667 535 L802.25 348.333 A2 7.915 0 0 1 804.25 348.333 L826.833 535z" fill="#f42"/>
+        <path d="M826.833 535 L849.417 348.333 A2 7.915 0 0 1 851.417 348.333 L874 535z" fill="#c9b797"/>
+
+        <path d="M249.8 21.8v4A4 4 0 0 1 254 22z" fill="#423122"/>
+        <path d="M533.2 21.8h-4A4 4 0 0 1 533 26z" fill="#423122"/>
+        <path d="M533.2 535.2v-4A4 4 0 0 1 529 535z" fill="#423122"/>
+        <path d="M249.8 535.2h4A4 4 0 0 1 250 531z" fill="#423122"/>
+        <path d="M590.8 21.8v4A4 4 0 0 1 595 22z" fill="#423122"/>
+        <path d="M874.2 21.8h-4A4 4 0 0 1 874 26z" fill="#423122"/>
+        <path d="M874.2 535.2v-4A4 4 0 0 1 870 535z" fill="#423122"/>
+        <path d="M590.8 535.2h4A4 4 0 0 1 591 531z" fill="#423122"/>
+
+        <rect x="182" y="21" rx="2" ry="2" width="47" height="140" fill="#38291d"/>
+        <rect x="895" y="395" rx="2" ry="2" width="47" height="140" fill="#38291d"/>
+
+        <g id="checkersLayer"></g>
+        <g id="pointLabelsLayer" visibility="hidden"></g>
+        <g id="extrasLayer"></g>
+        <g id="hitZonesLayer"></g>
+      </g>
+    </svg>
+
+    <div class="controls">
+      <div class="row">
+        <button id="modeWhiteBtn" class="mode-btn active" type="button" data-mode="white">+ Add <span class="checker-icon checker-icon--white"></span></button>
+        <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">+ Add <span class="checker-icon checker-icon--black"></span></button>
+        <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Delete 🗑️</button>
+      </div>
+      <div class="row">
+        <label><input id="showPointLabelsInput" type="checkbox" /> Номера полей</label>
+        <label><input id="showDiceInput" type="checkbox" /> Кубики</label>
+        <label><input id="showCubeInput" type="checkbox" /> Куб удвоения</label>
+      </div>
+      <div class="row">
+        <label>Сторона
+          <select id="diceSideInput">
+            <option value="right">справа</option>
+            <option value="left">слева</option>
+          </select>
+        </label>
+        <label>D1 <input id="dieOneInput" type="number" min="1" max="6" step="1" value="5" /></label>
+        <label>D2 <input id="dieTwoInput" type="number" min="1" max="6" step="1" value="3" /></label>
+        <label>Куб <input id="cubeValueInput" type="number" min="2" step="1" value="64" /></label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="exportPngBtn" type="button">Экспорт PNG</button>
+      <button id="flipBoardBtn" type="button">Перевернуть доску</button>
+      <label>Масштаб %
+        <input id="boardScaleNumber" class="scale-input" type="number" min="20" max="100" step="1" value="60" />
+      </label>
+    </div>
+  </div>
+
+  <script>
+    const svgNs = "http://www.w3.org/2000/svg";
+    const boardWrap = document.getElementById("boardWrap");
+    const boardSvg = document.getElementById("boardSvg");
+    const boardContent = document.getElementById("boardContent");
+    const checkersLayer = document.getElementById("checkersLayer");
+    const pointLabelsLayer = document.getElementById("pointLabelsLayer");
+    const extrasLayer = document.getElementById("extrasLayer");
+    const hitZonesLayer = document.getElementById("hitZonesLayer");
+
+    const boardScaleNumber = document.getElementById("boardScaleNumber");
+    const exportPngBtn = document.getElementById("exportPngBtn");
+    const flipBoardBtn = document.getElementById("flipBoardBtn");
+    const showDiceInput = document.getElementById("showDiceInput");
+    const diceSideInput = document.getElementById("diceSideInput");
+    const dieOneInput = document.getElementById("dieOneInput");
+    const dieTwoInput = document.getElementById("dieTwoInput");
+    const showCubeInput = document.getElementById("showCubeInput");
+    const cubeValueInput = document.getElementById("cubeValueInput");
+    const showPointLabelsInput = document.getElementById("showPointLabelsInput");
+
+    const modeButtons = {
+      white: document.getElementById("modeWhiteBtn"),
+      black: document.getElementById("modeBlackBtn"),
+      delete: document.getElementById("modeDeleteBtn")
+    };
+
+    const baseBoardWidth = 808;
+    const radius = 21.284;
+    const defaultStep = radius * 2 + 1;
+    const maxTowerSpan = defaultStep * 4;
+    let isBoardFlipped = false;
+    let editMode = "white";
+    let isDeleteDragging = false;
+    let activeDeletePointIndex = null;
+    let deleteHoldTimer = null;
+    let currentBoardScale = 60;
+
+    const leftXs = [273.583, 320.75, 367.917, 415.083, 462.25, 509.417];
+    const rightXs = [614.583, 661.75, 708.917, 756.083, 803.25, 850.417];
+    const topStartY = 45.583;
+    const bottomStartY = 511.417;
+    const pointLabelTopY = "14";
+    const pointLabelBottomY = "546";
+
+    const pointDefs = [
+      ...[...rightXs].reverse().map((x) => ({ x, startY: topStartY, direction: 1 })),
+      ...[...leftXs].reverse().map((x) => ({ x, startY: topStartY, direction: 1 })),
+      ...leftXs.map((x) => ({ x, startY: bottomStartY, direction: -1 })),
+      ...rightXs.map((x) => ({ x, startY: bottomStartY, direction: -1 }))
+    ];
+
+    const pointStacks = Array.from({ length: 24 }, () => []);
+
+    function cursorSvg(color, stroke, glyph = "") {
+      const text = glyph ? `<text x='12' y='14' font-size='12'>${glyph}</text>` : "";
+      return `data:image/svg+xml;utf8,${encodeURIComponent(
+        `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'>
+          <circle cx='11' cy='11' r='8' fill='${color}' stroke='${stroke}' stroke-width='2'/>
+          ${text}
+        </svg>`
+      )}`;
+    }
+
+    const modeCursor = {
+      white: `url("${cursorSvg("#ffffff", "#222222")}") 11 11, pointer`,
+      black: `url("${cursorSvg("#101018", "#c7a473")}") 11 11, pointer`,
+      delete: `url("${cursorSvg("#ffd9d9", "#994444")}") 11 11, pointer`
+    };
+
+    function applyMode(mode) {
+      editMode = mode;
+      Object.entries(modeButtons).forEach(([name, btn]) => {
+        btn.classList.toggle("active", name === mode);
+      });
+      boardWrap.style.cursor = modeCursor[mode];
+    }
+
+    function checkerStyleForColor(color) {
+      return color === "white"
+        ? { fill: "#fff", stroke: "#0d0d14", textColor: "#0d0d14" }
+        : { fill: "#0d0d14", stroke: "#e9c891", textColor: "#e9c891" };
+    }
+
+    function clampInt(value, min, max, fallback) {
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsed)) {
+        return fallback;
+      }
+      return Math.max(min, Math.min(max, parsed));
+    }
+
+    function applyTextFlipCompensation(textNode) {
+      const x = Number.parseFloat(textNode.getAttribute("x"));
+      const y = Number.parseFloat(textNode.getAttribute("y"));
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return;
+      }
+      if (isBoardFlipped) {
+        textNode.setAttribute("transform", `rotate(180 ${x} ${y})`);
+        return;
+      }
+      textNode.removeAttribute("transform");
+    }
+
+    function addCountLabel(x, y, count, textColor) {
+      const text = document.createElementNS(svgNs, "text");
+      text.setAttribute("x", String(x));
+      text.setAttribute("y", String(y));
+      text.setAttribute("fill", textColor);
+      text.setAttribute("font-size", "22");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "middle");
+      text.setAttribute("font-family", "Arial");
+      text.setAttribute("font-weight", "bold");
+      text.textContent = String(count);
+      applyTextFlipCompensation(text);
+      checkersLayer.appendChild(text);
+    }
+
+    function drawTower(pointIndex, stack) {
+      if (stack.length === 0) {
+        return;
+      }
+      const point = pointDefs[pointIndex];
+      const topColor = stack[stack.length - 1];
+      const style = checkerStyleForColor(topColor);
+      const step = stack.length <= 5 ? defaultStep : Math.min(defaultStep, maxTowerSpan / (stack.length - 1));
+      let topX = point.x;
+      let topY = point.startY;
+
+      for (let i = 0; i < stack.length; i += 1) {
+        const cx = point.x;
+        const cy = point.startY + point.direction * i * step;
+        const currentStyle = checkerStyleForColor(stack[i]);
+        topX = cx;
+        topY = cy;
+        const circle = document.createElementNS(svgNs, "circle");
+        circle.setAttribute("cx", String(cx));
+        circle.setAttribute("cy", String(cy));
+        circle.setAttribute("r", String(radius));
+        circle.setAttribute("fill", currentStyle.fill);
+        circle.setAttribute("stroke", currentStyle.stroke);
+        circle.setAttribute("stroke-width", "3");
+        checkersLayer.appendChild(circle);
+      }
+
+      if (stack.length > 5) {
+        addCountLabel(topX, topY, stack.length, style.textColor);
+      }
+    }
+
+    function createPointLabels() {
+      pointLabelsLayer.replaceChildren();
+      pointDefs.forEach((point, idx) => {
+        const text = document.createElementNS(svgNs, "text");
+        text.setAttribute("x", String(point.x));
+        text.setAttribute("y", point.direction === 1 ? pointLabelTopY : pointLabelBottomY);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("dominant-baseline", "central");
+        text.setAttribute("fill", "#e8eaff");
+        text.setAttribute("font-size", "11");
+        text.setAttribute("font-family", "Arial");
+        text.setAttribute("class", "point-label");
+        text.textContent = String(idx + 1);
+        applyTextFlipCompensation(text);
+        pointLabelsLayer.appendChild(text);
+      });
+    }
+
+    function syncPointLabelsVisibility() {
+      pointLabelsLayer.setAttribute("visibility", showPointLabelsInput.checked ? "visible" : "hidden");
+    }
+
+    function drawDie(x, y, value) {
+      const dieSize = 36.75;
+      const cornerRadius = 3.675;
+      const pipRadius = 3.675;
+      const offsetSmall = dieSize * (7.6 / 35);
+      const offsetMid = dieSize * 0.5;
+      const offsetLarge = dieSize * (27.4 / 35);
+
+      const die = document.createElementNS(svgNs, "rect");
+      die.setAttribute("x", String(x));
+      die.setAttribute("y", String(y));
+      die.setAttribute("width", String(dieSize));
+      die.setAttribute("height", String(dieSize));
+      die.setAttribute("rx", String(cornerRadius));
+      die.setAttribute("ry", String(cornerRadius));
+      die.setAttribute("fill", "#fff");
+      die.setAttribute("stroke", "#ccc");
+      die.setAttribute("stroke-width", "1");
+      extrasLayer.appendChild(die);
+
+      const positions = {
+        tl: [x + offsetSmall, y + offsetSmall],
+        tc: [x + offsetMid, y + offsetSmall],
+        tr: [x + offsetLarge, y + offsetSmall],
+        ml: [x + offsetSmall, y + offsetMid],
+        mc: [x + offsetMid, y + offsetMid],
+        mr: [x + offsetLarge, y + offsetMid],
+        bl: [x + offsetSmall, y + offsetLarge],
+        bc: [x + offsetMid, y + offsetLarge],
+        br: [x + offsetLarge, y + offsetLarge]
+      };
+
+      const map = {
+        1: ["mc"],
+        2: ["tl", "br"],
+        3: ["tl", "mc", "br"],
+        4: ["tl", "tr", "bl", "br"],
+        5: ["tl", "tr", "mc", "bl", "br"],
+        6: ["tl", "tr", "ml", "mr", "bl", "br"]
+      };
+
+      map[value].forEach((key) => {
+        const [cx, cy] = positions[key];
+        const pip = document.createElementNS(svgNs, "circle");
+        pip.setAttribute("cx", String(cx));
+        pip.setAttribute("cy", String(cy));
+        pip.setAttribute("r", String(pipRadius));
+        pip.setAttribute("fill", "#0d0d14");
+        extrasLayer.appendChild(pip);
+      });
+    }
+
+    function drawDoublingCube(value) {
+      const cube = document.createElementNS(svgNs, "rect");
+      cube.setAttribute("x", "539.5");
+      cube.setAttribute("y", "256.5");
+      cube.setAttribute("width", "45");
+      cube.setAttribute("height", "45");
+      cube.setAttribute("rx", "4");
+      cube.setAttribute("ry", "4");
+      cube.setAttribute("fill", "#4a6439");
+      cube.setAttribute("stroke", "#8c662e");
+      cube.setAttribute("stroke-width", "2");
+      extrasLayer.appendChild(cube);
+
+      const text = document.createElementNS(svgNs, "text");
+      text.setAttribute("x", "562");
+      text.setAttribute("y", "279");
+      text.setAttribute("dy", "5");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("fill", "#e8eaff");
+      text.setAttribute("font-size", "20");
+      text.setAttribute("font-weight", "bold");
+      text.textContent = String(value);
+      applyTextFlipCompensation(text);
+      extrasLayer.appendChild(text);
+    }
+
+    function renderBoard() {
+      checkersLayer.replaceChildren();
+      extrasLayer.replaceChildren();
+
+      pointStacks.forEach((stack, idx) => drawTower(idx, stack));
+
+      if (showDiceInput.checked) {
+        const dieOne = clampInt(dieOneInput.value, 1, 6, 1);
+        const dieTwo = clampInt(dieTwoInput.value, 1, 6, 1);
+        const isLeftSide = diceSideInput.value === "left";
+        dieOneInput.value = String(dieOne);
+        dieTwoInput.value = String(dieTwo);
+        drawDie(isLeftSide ? 348 : 689, 261, dieOne);
+        drawDie(isLeftSide ? 404 : 745, 261, dieTwo);
+      }
+
+      if (showCubeInput.checked) {
+        const cubeValue = clampInt(cubeValueInput.value, 2, 9999, 2);
+        cubeValueInput.value = String(cubeValue);
+        drawDoublingCube(cubeValue);
+      }
+    }
+
+    function editPoint(pointIndex) {
+      const stack = pointStacks[pointIndex];
+      if (editMode === "white") {
+        stack.push("white");
+      } else if (editMode === "black") {
+        stack.push("black");
+      } else if (stack.length > 0) {
+        stack.pop();
+      }
+      renderBoard();
+    }
+
+    function deleteOneChecker(pointIndex) {
+      const stack = pointStacks[pointIndex];
+      if (stack.length === 0) {
+        return;
+      }
+      stack.pop();
+      renderBoard();
+    }
+
+    function stopDeleteHold() {
+      if (deleteHoldTimer !== null) {
+        window.clearInterval(deleteHoldTimer);
+        deleteHoldTimer = null;
+      }
+      activeDeletePointIndex = null;
+    }
+
+    function startDeleteHold(pointIndex) {
+      activeDeletePointIndex = pointIndex;
+      if (deleteHoldTimer !== null) {
+        return;
+      }
+      deleteHoldTimer = window.setInterval(() => {
+        if (!isDeleteDragging || activeDeletePointIndex === null) {
+          return;
+        }
+        deleteOneChecker(activeDeletePointIndex);
+      }, 120);
+    }
+
+    function createHitZones() {
+      hitZonesLayer.replaceChildren();
+      const rectWidth = 47.167;
+      const rectHeight = radius + defaultStep * 5 + (topStartY - 22);
+      const zoneLeftOffset = rectWidth / 2;
+      const topZoneY = 22;
+      const bottomZoneY = 535 - rectHeight;
+
+      pointDefs.forEach((point, pointIndex) => {
+        const rect = document.createElementNS(svgNs, "rect");
+        rect.setAttribute("x", String(point.x - zoneLeftOffset));
+        rect.setAttribute("y", String(point.direction === 1 ? topZoneY : bottomZoneY));
+        rect.setAttribute("width", String(rectWidth));
+        rect.setAttribute("height", String(rectHeight));
+        rect.setAttribute("class", "hover-zone");
+        rect.dataset.pointIndex = String(pointIndex + 1);
+        rect.addEventListener("mousedown", (event) => {
+          if (editMode !== "delete" || event.button !== 0) {
+            return;
+          }
+          isDeleteDragging = true;
+          deleteOneChecker(pointIndex);
+          startDeleteHold(pointIndex);
+          event.preventDefault();
+        });
+        rect.addEventListener("mouseenter", (event) => {
+          if (editMode !== "delete" || !isDeleteDragging || (event.buttons & 1) !== 1) {
+            return;
+          }
+          activeDeletePointIndex = pointIndex;
+          deleteOneChecker(pointIndex);
+        });
+        rect.addEventListener("mouseleave", () => {
+          if (editMode !== "delete") {
+            return;
+          }
+          if (activeDeletePointIndex === pointIndex) {
+            activeDeletePointIndex = null;
+          }
+        });
+        rect.addEventListener("click", () => {
+          if (editMode !== "delete") {
+            editPoint(pointIndex);
+          }
+        });
+        hitZonesLayer.appendChild(rect);
+      });
+    }
+
+    function setBoardScale(scaleValue) {
+      const width = (baseBoardWidth * scaleValue) / 100;
+      boardSvg.style.width = `${width}px`;
+      currentBoardScale = scaleValue;
+    }
+
+    function applyBoardScale(rawValue, { commitToInput = false } = {}) {
+      const trimmed = String(rawValue).trim();
+      if (trimmed === "") {
+        if (commitToInput) {
+          boardScaleNumber.value = String(currentBoardScale);
+        }
+        return;
+      }
+
+      const parsed = Number.parseInt(trimmed, 10);
+      if (!Number.isFinite(parsed)) {
+        if (commitToInput) {
+          boardScaleNumber.value = String(currentBoardScale);
+        }
+        return;
+      }
+
+      const safeValue = Math.max(20, Math.min(100, parsed));
+      setBoardScale(safeValue);
+      if (commitToInput) {
+        boardScaleNumber.value = String(safeValue);
+      }
+    }
+
+    function applyBoardFlip() {
+      if (isBoardFlipped) {
+        const bbox = boardContent.getBBox();
+        const cx = bbox.x + bbox.width / 2;
+        const cy = bbox.y + bbox.height / 2;
+        boardContent.setAttribute("transform", `rotate(180 ${cx} ${cy})`);
+      } else {
+        boardContent.removeAttribute("transform");
+      }
+
+      pointLabelsLayer.querySelectorAll("text").forEach((textNode) => {
+        applyTextFlipCompensation(textNode);
+      });
+      extrasLayer.querySelectorAll("text").forEach((textNode) => {
+        applyTextFlipCompensation(textNode);
+      });
+    }
+
+    function svgToPngBlob() {
+      return new Promise((resolve, reject) => {
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(boardSvg);
+        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        const image = new Image();
+
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = 808;
+          canvas.height = 558;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(svgUrl);
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error("Не удалось создать PNG"));
+              return;
+            }
+            resolve(blob);
+          }, "image/png");
+        };
+
+        image.onerror = () => {
+          URL.revokeObjectURL(svgUrl);
+          reject(new Error("Ошибка рендера SVG"));
+        };
+
+        image.src = svgUrl;
+      });
+    }
+
+    async function savePng() {
+      try {
+        const pngBlob = await svgToPngBlob();
+        if ("showSaveFilePicker" in window) {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: "board-position.png",
+            types: [{ description: "PNG image", accept: { "image/png": [".png"] } }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(pngBlob);
+          await writable.close();
+          return;
+        }
+        const url = URL.createObjectURL(pngBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "board-position.png";
+        link.click();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error(error);
+        alert("Не удалось экспортировать PNG");
+      }
+    }
+
+    boardScaleNumber.addEventListener("input", (event) => applyBoardScale(event.target.value));
+    boardScaleNumber.addEventListener("blur", (event) => applyBoardScale(event.target.value, { commitToInput: true }));
+    boardScaleNumber.addEventListener("change", (event) => applyBoardScale(event.target.value, { commitToInput: true }));
+    showPointLabelsInput.addEventListener("change", syncPointLabelsVisibility);
+    showDiceInput.addEventListener("change", renderBoard);
+    diceSideInput.addEventListener("change", renderBoard);
+    dieOneInput.addEventListener("input", renderBoard);
+    dieTwoInput.addEventListener("input", renderBoard);
+    showCubeInput.addEventListener("change", renderBoard);
+    cubeValueInput.addEventListener("input", renderBoard);
+    exportPngBtn.addEventListener("click", savePng);
+    flipBoardBtn.addEventListener("click", () => {
+      isBoardFlipped = !isBoardFlipped;
+      applyBoardFlip();
+    });
+
+    Object.entries(modeButtons).forEach(([mode, btn]) => {
+      btn.addEventListener("click", () => {
+        applyMode(mode);
+        if (mode !== "delete") {
+          stopDeleteHold();
+          isDeleteDragging = false;
+        }
+      });
+    });
+    window.addEventListener("mouseup", () => {
+      isDeleteDragging = false;
+      stopDeleteHold();
+    });
+
+    createPointLabels();
+    createHitZones();
+    syncPointLabelsVisibility();
+    applyBoardScale(60, { commitToInput: true });
+    applyMode("white");
+    applyBoardFlip();
+    renderBoard();
+  </script>
+</body>
+</html>
