@@ -1641,36 +1641,98 @@
       });
     }
 
+    function prepareBoardSvgForExport() {
+      const clone = boardSvg.cloneNode(true);
+      clone.removeAttribute("style");
+      clone.getElementById("hitZonesLayer")?.remove();
+      clone.getElementById("arrowHitLayer")?.remove();
+      clone.getElementById("moveAnimationLayer")?.replaceChildren();
+      clone.getElementById("lineSelectionLayer")?.replaceChildren();
+      clone.querySelectorAll("animate, animateTransform").forEach((el) => {
+        el.remove();
+      });
+      clone.querySelectorAll("#checkersLayer circle[style]").forEach((el) => {
+        el.removeAttribute("style");
+      });
+      const styleEl = document.createElementNS(svgNs, "style");
+      styleEl.textContent = "\n        .point-label { font-variant-numeric: tabular-nums; }\n        ";
+      clone.insertBefore(styleEl, clone.firstChild);
+      clone.setAttribute("width", "808");
+      clone.setAttribute("height", "558");
+      if (!clone.getAttribute("xmlns")) {
+        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      }
+      return clone;
+    }
+
     function svgToPngBlob() {
       return new Promise((resolve, reject) => {
+        const clone = prepareBoardSvgForExport();
         const serializer = new XMLSerializer();
-        const svgString = serializer.serializeToString(boardSvg);
-        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-        const svgUrl = URL.createObjectURL(svgBlob);
+        const svgString = serializer.serializeToString(clone);
+        const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
         const image = new Image();
+        let objectUrl = null;
 
-        image.onload = () => {
+        const drawToPng = () => {
           const canvas = document.createElement("canvas");
           canvas.width = 808;
           canvas.height = 558;
           const ctx = canvas.getContext("2d");
-          ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-          URL.revokeObjectURL(svgUrl);
-          canvas.toBlob((blob) => {
-            if (!blob) {
-              reject(new Error("Не удалось создать PNG"));
-              return;
+          try {
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          } catch (err) {
+            if (objectUrl) {
+              URL.revokeObjectURL(objectUrl);
             }
-            resolve(blob);
-          }, "image/png");
+            reject(err);
+            return;
+          }
+          if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+          }
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Не удалось создать PNG"));
+                return;
+              }
+              resolve(blob);
+            },
+            "image/png"
+          );
+        };
+
+        const runDecodeAndDraw = async () => {
+          try {
+            if (image.decode) {
+              await image.decode();
+            }
+          } catch {
+            // ignore; still try to draw
+          }
+          requestAnimationFrame(drawToPng);
+        };
+
+        image.onload = () => {
+          void runDecodeAndDraw();
         };
 
         image.onerror = () => {
-          URL.revokeObjectURL(svgUrl);
-          reject(new Error("Ошибка рендера SVG"));
+          if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+            reject(new Error("Ошибка рендера SVG"));
+            return;
+          }
+          objectUrl = URL.createObjectURL(
+            new Blob([svgString], { type: "image/svg+xml;charset=utf-8" })
+          );
+          image.src = objectUrl;
         };
 
-        image.src = svgUrl;
+        image.src = dataUrl;
       });
     }
 
