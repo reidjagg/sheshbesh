@@ -71,13 +71,13 @@
       }
 
       .actions--top {
-        margin-top: 8px;
-        margin-bottom: 8px;
+        margin-top: 4px;
+        margin-bottom: 4px;
       }
 
       .controls,
       .dice-panel {
-        margin-top: 8px;
+        margin-top: 4px;
       }
 
       #boardSvg {
@@ -126,12 +126,13 @@
     }
 
     .actions--top {
-      margin-top: 12px;
-      margin-bottom: 12px;
+      margin-top: 6px;
+      margin-bottom: 6px;
     }
 
     .actions--bottom {
-      margin-top: 12px;
+      margin-top: 6px;
+      align-self: center;
     }
 
     .actions button {
@@ -170,7 +171,7 @@
     }
 
     .controls {
-      margin-top: 12px;
+      margin-top: 6px;
       display: grid;
       gap: 4px;
       padding: 6px 8px;
@@ -185,7 +186,7 @@
     }
 
     .dice-panel {
-      margin-top: 12px;
+      margin-top: 6px;
       display: grid;
       gap: 4px;
       padding: 6px 8px;
@@ -242,13 +243,13 @@
     }
 
     .checker-icon--white {
-      background: #ffffff;
-      border-color: #111;
+      background: var(--checker-white-bg, #ffffff);
+      border-color: var(--checker-white-bd, #111111);
     }
 
     .checker-icon--black {
-      background: #101018;
-      border-color: #c7a473;
+      background: var(--checker-black-bg, #0d0d14);
+      border-color: var(--checker-black-bd, #e9c891);
     }
 
     .hover-zone {
@@ -264,7 +265,7 @@
     /* :hover on touch (first tap) stole the gesture; only dim on real hover. */
     @media (hover: hover) and (pointer: fine) {
       .hover-zone:hover {
-        opacity: 0.075;
+        opacity: 0.1;
       }
     }
 
@@ -329,15 +330,119 @@
       background: var(--ui-chip-inner);
       color: var(--ui-text);
     }
+
+    .palette-select-wrap {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 24px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .palette-menu-trigger {
+      display: block;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: 1px solid var(--ui-input-border);
+      border-radius: 4px;
+      background: var(--ui-chip-inner);
+      cursor: pointer;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .palette-menu-trigger:focus-visible {
+      outline: 2px solid var(--ui-text);
+      outline-offset: 2px;
+    }
+
+    .palette-swatch-preview {
+      position: absolute;
+      inset: 1px;
+      border-radius: 3px;
+      box-sizing: border-box;
+      pointer-events: none;
+      background: linear-gradient(to right, #c9b797 50%, #ff4422 50%);
+    }
+
+    .palette-menu-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      left: auto;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 6px;
+      margin: 0;
+      list-style: none;
+      background: var(--ui-surface-2);
+      border: 1px solid var(--ui-border);
+      border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+      box-sizing: border-box;
+    }
+
+    .palette-menu-dropdown[hidden] {
+      display: none !important;
+    }
+
+    .palette-menu-option {
+      display: block;
+      width: 52px;
+      height: 22px;
+      margin: 0;
+      padding: 0;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      box-sizing: border-box;
+      background-clip: padding-box;
+    }
+
+    .palette-menu-option:hover {
+      filter: brightness(1.06);
+    }
+
+    .palette-menu-option[aria-selected="true"] {
+      border-color: var(--ui-text);
+    }
+
+    .palette-menu-option:focus-visible {
+      outline: 2px solid var(--ui-text);
+      outline-offset: 1px;
+    }
   </style>
 </head>
 <body>
   <div class="actions actions--bottom">
-      <button id="exportPngBtn" type="button">PNG💾</button>
-      <button id="flipBoardBtn" type="button">Поворот🔄</button>
-      <button id="togglePointLabelsBtn" type="button">Поля🔢</button>
+      <button id="exportPngBtn" type="button">💾</button>
+      <button id="flipBoardBtn" type="button">🔄</button>
+      <button id="togglePointLabelsBtn" type="button">🔢</button>
       <button id="zoomOutBtn" type="button">🔍</button>
       <button id="zoomInBtn" type="button">🔎</button>
+      <div class="value-chip palette-select-label">
+        <div class="palette-select-wrap">
+          <input type="hidden" id="trianglePaletteInput" value="classic" />
+          <button
+            type="button"
+            id="paletteMenuBtn"
+            class="palette-menu-trigger"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="paletteMenuDropdown"
+            title="Цветовая тема доски и шашек"
+            aria-label="Выбор палитры доски"
+          >
+            <span id="paletteSwatchPreview" class="palette-swatch-preview" aria-hidden="true"></span>
+          </button>
+          <div id="paletteMenuDropdown" class="palette-menu-dropdown" role="listbox" hidden aria-label="Палитры"></div>
+        </div>
+      </div>
     </div>
 
     <div class="actions actions--top">
@@ -350,56 +455,58 @@
     <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="159 0 808 558" width="808" height="558">
       <g id="boardContent">
         <defs id="arrowDefs"></defs>
-        <rect x="159" y="0" width="806" height="558" rx="20" ry="20" fill="#423122" stroke="#000" stroke-width="1"/>
-        <rect x="250" y="22" width="283" height="513" fill="#4a6439"/>
-        <rect x="591" y="22" width="283" height="513" fill="#4a6439"/>
+        <rect x="159" y="0" width="806" height="558" rx="20" ry="20" data-board="frame" fill="#423122" stroke="#000" stroke-width="1"/>
+        <rect x="250" y="22" width="283" height="513" data-board="field" fill="#4a6439"/>
+        <rect x="591" y="22" width="283" height="513" data-board="field" fill="#4a6439"/>
 
-        <path d="M250 22 L272.583 208.667 A2 7.915 0 0 0 274.583 208.667 L297.167 22z" fill="#c9b797"/>
-        <path d="M297.167 22 L319.75 208.667 A2 7.915 0 0 0 321.75 208.667 L344.333 22z" fill="#f42"/>
-        <path d="M344.333 22 L366.917 208.667 A2 7.915 0 0 0 368.917 208.667 L391.5 22z" fill="#c9b797"/>
-        <path d="M391.5 22 L414.083 208.667 A2 7.915 0 0 0 416.083 208.667 L438.667 22z" fill="#f42"/>
-        <path d="M438.667 22 L461.25 208.667 A2 7.915 0 0 0 463.25 208.667 L485.833 22z" fill="#c9b797"/>
-        <path d="M485.833 22 L508.417 208.667 A2 7.915 0 0 0 510.417 208.667 L533 22z" fill="#f42"/>
+        <g id="boardTriangleFields">
+        <path data-tri="a" d="M250 22 L272.583 208.667 A2 7.915 0 0 0 274.583 208.667 L297.167 22z" fill="#c9b797"/>
+        <path data-tri="b" d="M297.167 22 L319.75 208.667 A2 7.915 0 0 0 321.75 208.667 L344.333 22z" fill="#f42"/>
+        <path data-tri="a" d="M344.333 22 L366.917 208.667 A2 7.915 0 0 0 368.917 208.667 L391.5 22z" fill="#c9b797"/>
+        <path data-tri="b" d="M391.5 22 L414.083 208.667 A2 7.915 0 0 0 416.083 208.667 L438.667 22z" fill="#f42"/>
+        <path data-tri="a" d="M438.667 22 L461.25 208.667 A2 7.915 0 0 0 463.25 208.667 L485.833 22z" fill="#c9b797"/>
+        <path data-tri="b" d="M485.833 22 L508.417 208.667 A2 7.915 0 0 0 510.417 208.667 L533 22z" fill="#f42"/>
 
-        <path d="M250 535 L272.583 348.333 A2 7.915 0 0 1 274.583 348.333 L297.167 535z" fill="#f42"/>
-        <path d="M297.167 535 L319.75 348.333 A2 7.915 0 0 1 321.75 348.333 L344.333 535z" fill="#c9b797"/>
-        <path d="M344.333 535 L366.917 348.333 A2 7.915 0 0 1 368.917 348.333 L391.5 535z" fill="#f42"/>
-        <path d="M391.5 535 L414.083 348.333 A2 7.915 0 0 1 416.083 348.333 L438.667 535z" fill="#c9b797"/>
-        <path d="M438.667 535 L461.25 348.333 A2 7.915 0 0 1 463.25 348.333 L485.833 535z" fill="#f42"/>
-        <path d="M485.833 535 L508.417 348.333 A2 7.915 0 0 1 510.417 348.333 L533 535z" fill="#c9b797"/>
+        <path data-tri="b" d="M250 535 L272.583 348.333 A2 7.915 0 0 1 274.583 348.333 L297.167 535z" fill="#f42"/>
+        <path data-tri="a" d="M297.167 535 L319.75 348.333 A2 7.915 0 0 1 321.75 348.333 L344.333 535z" fill="#c9b797"/>
+        <path data-tri="b" d="M344.333 535 L366.917 348.333 A2 7.915 0 0 1 368.917 348.333 L391.5 535z" fill="#f42"/>
+        <path data-tri="a" d="M391.5 535 L414.083 348.333 A2 7.915 0 0 1 416.083 348.333 L438.667 535z" fill="#c9b797"/>
+        <path data-tri="b" d="M438.667 535 L461.25 348.333 A2 7.915 0 0 1 463.25 348.333 L485.833 535z" fill="#f42"/>
+        <path data-tri="a" d="M485.833 535 L508.417 348.333 A2 7.915 0 0 1 510.417 348.333 L533 535z" fill="#c9b797"/>
 
-        <path d="M591 22 L613.583 208.667 A2 7.915 0 0 0 615.583 208.667 L638.167 22z" fill="#c9b797"/>
-        <path d="M638.167 22 L660.75 208.667 A2 7.915 0 0 0 662.75 208.667 L685.333 22z" fill="#f42"/>
-        <path d="M685.333 22 L707.917 208.667 A2 7.915 0 0 0 709.917 208.667 L732.5 22z" fill="#c9b797"/>
-        <path d="M732.5 22 L755.083 208.667 A2 7.915 0 0 0 757.083 208.667 L779.667 22z" fill="#f42"/>
-        <path d="M779.667 22 L802.25 208.667 A2 7.915 0 0 0 804.25 208.667 L826.833 22z" fill="#c9b797"/>
-        <path d="M826.833 22 L849.417 208.667 A2 7.915 0 0 0 851.417 208.667 L874 22z" fill="#f42"/>
+        <path data-tri="a" d="M591 22 L613.583 208.667 A2 7.915 0 0 0 615.583 208.667 L638.167 22z" fill="#c9b797"/>
+        <path data-tri="b" d="M638.167 22 L660.75 208.667 A2 7.915 0 0 0 662.75 208.667 L685.333 22z" fill="#f42"/>
+        <path data-tri="a" d="M685.333 22 L707.917 208.667 A2 7.915 0 0 0 709.917 208.667 L732.5 22z" fill="#c9b797"/>
+        <path data-tri="b" d="M732.5 22 L755.083 208.667 A2 7.915 0 0 0 757.083 208.667 L779.667 22z" fill="#f42"/>
+        <path data-tri="a" d="M779.667 22 L802.25 208.667 A2 7.915 0 0 0 804.25 208.667 L826.833 22z" fill="#c9b797"/>
+        <path data-tri="b" d="M826.833 22 L849.417 208.667 A2 7.915 0 0 0 851.417 208.667 L874 22z" fill="#f42"/>
 
-        <path d="M591 535 L613.583 348.333 A2 7.915 0 0 1 615.583 348.333 L638.167 535z" fill="#f42"/>
-        <path d="M638.167 535 L660.75 348.333 A2 7.915 0 0 1 662.75 348.333 L685.333 535z" fill="#c9b797"/>
-        <path d="M685.333 535 L707.917 348.333 A2 7.915 0 0 1 709.917 348.333 L732.5 535z" fill="#f42"/>
-        <path d="M732.5 535 L755.083 348.333 A2 7.915 0 0 1 757.083 348.333 L779.667 535z" fill="#c9b797"/>
-        <path d="M779.667 535 L802.25 348.333 A2 7.915 0 0 1 804.25 348.333 L826.833 535z" fill="#f42"/>
-        <path d="M826.833 535 L849.417 348.333 A2 7.915 0 0 1 851.417 348.333 L874 535z" fill="#c9b797"/>
+        <path data-tri="b" d="M591 535 L613.583 348.333 A2 7.915 0 0 1 615.583 348.333 L638.167 535z" fill="#f42"/>
+        <path data-tri="a" d="M638.167 535 L660.75 348.333 A2 7.915 0 0 1 662.75 348.333 L685.333 535z" fill="#c9b797"/>
+        <path data-tri="b" d="M685.333 535 L707.917 348.333 A2 7.915 0 0 1 709.917 348.333 L732.5 535z" fill="#f42"/>
+        <path data-tri="a" d="M732.5 535 L755.083 348.333 A2 7.915 0 0 1 757.083 348.333 L779.667 535z" fill="#c9b797"/>
+        <path data-tri="b" d="M779.667 535 L802.25 348.333 A2 7.915 0 0 1 804.25 348.333 L826.833 535z" fill="#f42"/>
+        <path data-tri="a" d="M826.833 535 L849.417 348.333 A2 7.915 0 0 1 851.417 348.333 L874 535z" fill="#c9b797"/>
+        </g>
 
-        <path d="M249.8 21.8v4A4 4 0 0 1 254 22z" fill="#423122"/>
-        <path d="M533.2 21.8h-4A4 4 0 0 1 533 26z" fill="#423122"/>
-        <path d="M533.2 535.2v-4A4 4 0 0 1 529 535z" fill="#423122"/>
-        <path d="M249.8 535.2h4A4 4 0 0 1 250 531z" fill="#423122"/>
-        <path d="M590.8 21.8v4A4 4 0 0 1 595 22z" fill="#423122"/>
-        <path d="M874.2 21.8h-4A4 4 0 0 1 874 26z" fill="#423122"/>
-        <path d="M874.2 535.2v-4A4 4 0 0 1 870 535z" fill="#423122"/>
-        <path d="M590.8 535.2h4A4 4 0 0 1 591 531z" fill="#423122"/>
+        <path data-board="corner" d="M249.8 21.8v4A4 4 0 0 1 254 22z" fill="#423122"/>
+        <path data-board="corner" d="M533.2 21.8h-4A4 4 0 0 1 533 26z" fill="#423122"/>
+        <path data-board="corner" d="M533.2 535.2v-4A4 4 0 0 1 529 535z" fill="#423122"/>
+        <path data-board="corner" d="M249.8 535.2h4A4 4 0 0 1 250 531z" fill="#423122"/>
+        <path data-board="corner" d="M590.8 21.8v4A4 4 0 0 1 595 22z" fill="#423122"/>
+        <path data-board="corner" d="M874.2 21.8h-4A4 4 0 0 1 874 26z" fill="#423122"/>
+        <path data-board="corner" d="M874.2 535.2v-4A4 4 0 0 1 870 535z" fill="#423122"/>
+        <path data-board="corner" d="M590.8 535.2h4A4 4 0 0 1 591 531z" fill="#423122"/>
 
-        <rect x="182" y="21" rx="2" ry="2" width="47" height="140" fill="#38291d"/>
-        <rect x="895" y="395" rx="2" ry="2" width="47" height="140" fill="#38291d"/>
+        <rect x="182" y="21" rx="2" ry="2" width="47" height="140" data-board="rail" fill="#38291d"/>
+        <rect x="895" y="395" rx="2" ry="2" width="47" height="140" data-board="rail" fill="#38291d"/>
 
         <g id="arrowsLayer" pointer-events="none"></g>
         <g id="checkersLayer"></g>
         <g id="countLabelsLayer"></g>
         <g id="moveAnimationLayer" pointer-events="none"></g>
         <g id="lineSelectionLayer" pointer-events="none"></g>
-        <g id="pointLabelsLayer" visibility="hidden"></g>
+        <g id="pointLabelsLayer" visibility="visible"></g>
         <g id="extrasLayer"></g>
         <g id="hitZonesLayer"></g>
         <g id="arrowHitLayer" pointer-events="none"></g>
@@ -470,6 +577,223 @@
     const arrowsLayer = document.getElementById("arrowsLayer");
     const hitZonesLayer = document.getElementById("hitZonesLayer");
     const arrowHitLayer = document.getElementById("arrowHitLayer");
+    const boardTriangleFields = document.getElementById("boardTriangleFields");
+    const trianglePaletteInput = document.getElementById("trianglePaletteInput");
+    const paletteSwatchPreview = document.getElementById("paletteSwatchPreview");
+    const paletteMenuBtn = document.getElementById("paletteMenuBtn");
+    const paletteMenuDropdown = document.getElementById("paletteMenuDropdown");
+    const BOARD_PALETTE_STORAGE_KEY = "sheshbesh-board-palette";
+    const PALETTE_MENU_ORDER = ["classic", "maket", "nightBlue", "menu"];
+    const PALETTE_OPTION_LABELS = {
+      classic: "Классика",
+      maket: "По макету",
+      nightBlue: "Ночная синяя",
+      menu: "Меню"
+    };
+
+    const boardPalettes = {
+      classic: {
+        frame: "#423122",
+        frameStroke: "#000000",
+        field: "#4a6439",
+        triA: "#c9b797",
+        triB: "#ff4422",
+        corner: "#423122",
+        rail: "#38291d",
+        checkerWhiteFill: "#ffffff",
+        checkerWhiteStroke: "#222222",
+        checkerWhiteText: "#0d0d14",
+        checkerBlackFill: "#0d0d14",
+        checkerBlackStroke: "#e9c891",
+        checkerBlackText: "#e9c891",
+        cubeFill: "#4a6439",
+        cubeStroke: "#8c662e",
+        cubeText: "#e8eaff"
+      },
+      maket: {
+        frame: "#3a2012",
+        frameStroke: "#000000",
+        field: "#355a34",
+        triA: "#eba04d",
+        triB: "#467745",
+        corner: "#3a2012",
+        rail: "#28150c",
+        checkerWhiteFill: "#ffe19c",
+        checkerWhiteStroke: "#3a2012",
+        checkerWhiteText: "#3a2012",
+        checkerBlackFill: "#db382c",
+        checkerBlackStroke: "#5c1810",
+        checkerBlackText: "#ffe19c",
+        cubeFill: "#355a34",
+        cubeStroke: "#eba04d",
+        cubeText: "#ffe19c"
+      },
+      /** Миниатюра thumb: рамка #070024, поле #3e7be2, треугольники #376ad6 / #6394e9, шашки #e8eaff / #2e2cad */
+      nightBlue: {
+        frame: "#070024",
+        frameStroke: "#000010",
+        field: "#3e7be2",
+        triA: "#376ad6",
+        triB: "#6394e9",
+        corner: "#070024",
+        rail: "#040018",
+        checkerWhiteFill: "#e8eaff",
+        checkerWhiteStroke: "#2e2cad",
+        checkerWhiteText: "#2e2cad",
+        checkerBlackFill: "#2e2cad",
+        checkerBlackStroke: "#1a1a66",
+        checkerBlackText: "#e8eaff",
+        cubeFill: "#2b44ff",
+        cubeStroke: "#6394e9",
+        cubeText: "#e8eaff"
+      },
+      /** SVG MENU: поле #403b54, треугольники #8657a7 / #9f744a, белые #fff, тёмные по умолчанию чёрные */
+      menu: {
+        frame: "#0c0a12",
+        frameStroke: "#000000",
+        field: "#403b54",
+        triA: "#8657a7",
+        triB: "#9f744a",
+        corner: "#0c0a12",
+        rail: "#08060e",
+        checkerWhiteFill: "#ffffff",
+        checkerWhiteStroke: "#8657a7",
+        checkerWhiteText: "#403b54",
+        checkerBlackFill: "#0d0d14",
+        checkerBlackStroke: "#9f744a",
+        checkerBlackText: "#ffffff",
+        cubeFill: "#8657a7",
+        cubeStroke: "#9f744a",
+        cubeText: "#ffffff"
+      }
+    };
+
+    function getActivePalette() {
+      const v = trianglePaletteInput && trianglePaletteInput.value;
+      const key = v && v in boardPalettes ? v : "classic";
+      return boardPalettes[key];
+    }
+
+    function applyCheckerThemeCss(p) {
+      const root = document.documentElement;
+      root.style.setProperty("--checker-white-bg", p.checkerWhiteFill);
+      root.style.setProperty("--checker-white-bd", p.checkerWhiteStroke);
+      root.style.setProperty("--checker-black-bg", p.checkerBlackFill);
+      root.style.setProperty("--checker-black-bd", p.checkerBlackStroke);
+    }
+
+    function applyBoardPalette(paletteKey) {
+      const key = paletteKey in boardPalettes ? paletteKey : "classic";
+      if (trianglePaletteInput) {
+        trianglePaletteInput.value = key;
+      }
+      const p = boardPalettes[key];
+      applyCheckerThemeCss(p);
+      const frame = boardContent.querySelector('[data-board="frame"]');
+      if (frame) {
+        frame.setAttribute("fill", p.frame);
+        frame.setAttribute("stroke", p.frameStroke);
+      }
+      boardContent.querySelectorAll('[data-board="field"]').forEach((el) => {
+        el.setAttribute("fill", p.field);
+      });
+      boardContent.querySelectorAll('[data-board="corner"]').forEach((el) => {
+        el.setAttribute("fill", p.corner);
+      });
+      boardContent.querySelectorAll('[data-board="rail"]').forEach((el) => {
+        el.setAttribute("fill", p.rail);
+      });
+      if (boardTriangleFields) {
+        boardTriangleFields.querySelectorAll('[data-tri="a"]').forEach((el) => {
+          el.setAttribute("fill", p.triA);
+        });
+        boardTriangleFields.querySelectorAll('[data-tri="b"]').forEach((el) => {
+          el.setAttribute("fill", p.triB);
+        });
+      }
+      if (paletteSwatchPreview) {
+        paletteSwatchPreview.style.background = `linear-gradient(to right, ${p.triA} 50%, ${p.triB} 50%)`;
+      }
+      syncPaletteMenuOptions();
+    }
+
+    function syncPaletteMenuOptions() {
+      if (!paletteMenuDropdown || !trianglePaletteInput) {
+        return;
+      }
+      const current = trianglePaletteInput.value;
+      paletteMenuDropdown.querySelectorAll(".palette-menu-option").forEach((opt) => {
+        opt.setAttribute("aria-selected", opt.dataset.paletteKey === current ? "true" : "false");
+      });
+    }
+
+    function setPaletteMenuOpen(open) {
+      if (!paletteMenuDropdown || !paletteMenuBtn) {
+        return;
+      }
+      paletteMenuDropdown.hidden = !open;
+      paletteMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    function chooseBoardPaletteKey(key) {
+      const k = key in boardPalettes ? key : "classic";
+      applyBoardPalette(k);
+      setPaletteMenuOpen(false);
+      try {
+        localStorage.setItem(BOARD_PALETTE_STORAGE_KEY, k);
+      } catch (_) {
+        /* ignore */
+      }
+      renderBoard();
+      applyMode(editMode);
+    }
+
+    function buildPaletteMenu() {
+      if (!paletteMenuDropdown) {
+        return;
+      }
+      paletteMenuDropdown.innerHTML = "";
+      PALETTE_MENU_ORDER.forEach((paletteKey) => {
+        if (!(paletteKey in boardPalettes)) {
+          return;
+        }
+        const p = boardPalettes[paletteKey];
+        const opt = document.createElement("button");
+        opt.type = "button";
+        opt.setAttribute("role", "option");
+        opt.className = "palette-menu-option";
+        opt.dataset.paletteKey = paletteKey;
+        opt.setAttribute("aria-selected", "false");
+        opt.style.background = `linear-gradient(to right, ${p.triA} 50%, ${p.triB} 50%)`;
+        opt.setAttribute("aria-label", PALETTE_OPTION_LABELS[paletteKey] || paletteKey);
+        opt.addEventListener("click", (event) => {
+          event.stopPropagation();
+          chooseBoardPaletteKey(paletteKey);
+        });
+        paletteMenuDropdown.appendChild(opt);
+      });
+    }
+
+    function initBoardPaletteFromStorage() {
+      let stored = null;
+      try {
+        stored = localStorage.getItem(BOARD_PALETTE_STORAGE_KEY);
+      } catch (_) {
+        /* ignore */
+      }
+      if (stored === "main") {
+        stored = "maket";
+      }
+      const key = stored && stored in boardPalettes ? stored : "classic";
+      applyBoardPalette(key);
+      try {
+        localStorage.setItem(BOARD_PALETTE_STORAGE_KEY, key);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+
+    buildPaletteMenu();
 
     const zoomOutBtn = document.getElementById("zoomOutBtn");
     const zoomInBtn = document.getElementById("zoomInBtn");
@@ -501,7 +825,7 @@
     const arrowStartWidth = cellWidth;
     const arrowEndWidth = cellWidth * 0.1;
     let isBoardFlipped = false;
-    let arePointLabelsVisible = false;
+    let arePointLabelsVisible = true;
     let editMode = "white";
     let isDeleteDragging = false;
     let activeDeletePointIndex = null;
@@ -509,6 +833,7 @@
     let currentBoardScale = 60;
     const editHistory = [];
     const redoHistory = [];
+    let diceSnapshot = { die1: "0", die2: "0", cube: "0" };
     const arrows = [];
     let nextArrowId = 1;
     let lineStartPointIndex = null;
@@ -558,20 +883,23 @@
       )}`;
     }
 
-    const modeCursor = {
-      white: `url("${cursorSvg("#ffffff", "#222222")}") 11 11, pointer`,
-      black: `url("${cursorSvg("#101018", "#c7a473")}") 11 11, pointer`,
-      lines: `url("${whiteArrowCursorSvg()}") 2 2, pointer`,
-      move: "default",
-      delete: `url("${cursorSvg("#ffd9d9", "#994444")}") 11 11, pointer`
-    };
+    function getModeCursorMap() {
+      const p = getActivePalette();
+      return {
+        white: `url("${cursorSvg(p.checkerWhiteFill, p.checkerWhiteStroke)}") 11 11, pointer`,
+        black: `url("${cursorSvg(p.checkerBlackFill, p.checkerBlackStroke)}") 11 11, pointer`,
+        lines: `url("${whiteArrowCursorSvg()}") 2 2, pointer`,
+        move: "default",
+        delete: `url("${cursorSvg("#ffd9d9", "#994444")}") 11 11, pointer`
+      };
+    }
 
     function applyMode(mode) {
       editMode = mode;
       Object.entries(modeButtons).forEach(([name, btn]) => {
         btn.classList.toggle("active", name === mode);
       });
-      document.body.style.cursor = modeCursor[mode];
+      document.body.style.cursor = getModeCursorMap()[mode];
       arrowHitLayer.setAttribute("pointer-events", mode === "delete" ? "auto" : "none");
       if (mode !== "lines") {
         lineStartPointIndex = null;
@@ -583,9 +911,10 @@
     }
 
     function checkerStyleForColor(color) {
+      const p = getActivePalette();
       return color === "white"
-        ? { fill: "#fff", stroke: "#0d0d14", textColor: "#0d0d14" }
-        : { fill: "#0d0d14", stroke: "#e9c891", textColor: "#e9c891" };
+        ? { fill: p.checkerWhiteFill, stroke: p.checkerWhiteStroke, textColor: p.checkerWhiteText }
+        : { fill: p.checkerBlackFill, stroke: p.checkerBlackStroke, textColor: p.checkerBlackText };
     }
 
     function clampInt(value, min, max, fallback) {
@@ -865,6 +1194,7 @@
     }
 
     function drawDoublingCube(value) {
+      const pal = getActivePalette();
       const cube = document.createElementNS(svgNs, "rect");
       cube.setAttribute("x", "539.5");
       cube.setAttribute("y", "256.5");
@@ -872,8 +1202,8 @@
       cube.setAttribute("height", "45");
       cube.setAttribute("rx", "4");
       cube.setAttribute("ry", "4");
-      cube.setAttribute("fill", "#4a6439");
-      cube.setAttribute("stroke", "#8c662e");
+      cube.setAttribute("fill", pal.cubeFill);
+      cube.setAttribute("stroke", pal.cubeStroke);
       cube.setAttribute("stroke-width", "2");
       extrasLayer.appendChild(cube);
 
@@ -882,7 +1212,7 @@
       text.setAttribute("y", "279");
       text.setAttribute("dy", "5");
       text.setAttribute("text-anchor", "middle");
-      text.setAttribute("fill", "#e8eaff");
+      text.setAttribute("fill", pal.cubeText);
       text.setAttribute("font-size", "20");
       text.setAttribute("font-weight", "bold");
       text.textContent = String(value);
@@ -1050,7 +1380,7 @@
         const startStop = document.createElementNS(svgNs, "stop");
         startStop.setAttribute("offset", "0%");
         startStop.setAttribute("stop-color", "#f0f0ff");
-        startStop.setAttribute("stop-opacity", "0");
+        startStop.setAttribute("stop-opacity", "0.1");
         const endStop = document.createElementNS(svgNs, "stop");
         endStop.setAttribute("offset", "100%");
         endStop.setAttribute("stop-color", "#f0f0ff");
@@ -1101,6 +1431,32 @@
     function recordEditAction(action) {
       editHistory.push(action);
       redoHistory.length = 0;
+    }
+
+    function getDiceFromInputs() {
+      return {
+        die1: String(dieOneInput.value),
+        die2: String(dieTwoInput.value),
+        cube: String(cubeValueInput.value)
+      };
+    }
+
+    function syncDiceSnapshotFromInputs() {
+      diceSnapshot = getDiceFromInputs();
+    }
+
+    function recordDiceCubeChangeIfNeeded() {
+      const next = getDiceFromInputs();
+      if (next.die1 === diceSnapshot.die1 && next.die2 === diceSnapshot.die2 && next.cube === diceSnapshot.cube) {
+        return;
+      }
+      recordEditAction({
+        type: "diceCube",
+        prev: { ...diceSnapshot },
+        next: { ...next }
+      });
+      renderBoard();
+      syncDiceSnapshotFromInputs();
     }
 
     function queueTowerShiftAnimation(pointIndexLike, fromCount, toCount) {
@@ -1419,6 +1775,16 @@
         return;
       }
 
+      if (lastAction.type === "diceCube") {
+        dieOneInput.value = lastAction.prev.die1;
+        dieTwoInput.value = lastAction.prev.die2;
+        cubeValueInput.value = lastAction.prev.cube;
+        redoHistory.push(lastAction);
+        renderBoard();
+        syncDiceSnapshotFromInputs();
+        return;
+      }
+
       if (lastAction.type === "addBar") {
         const stack = barStacks[lastAction.section];
         if (stack.length > 0) {
@@ -1483,6 +1849,16 @@
       if (redoAction.type === "lineStartSelection") {
         lineStartPointIndex = redoAction.pointIndex;
         renderBoard();
+        return;
+      }
+
+      if (redoAction.type === "diceCube") {
+        dieOneInput.value = redoAction.next.die1;
+        dieTwoInput.value = redoAction.next.die2;
+        cubeValueInput.value = redoAction.next.cube;
+        editHistory.push(redoAction);
+        renderBoard();
+        syncDiceSnapshotFromInputs();
         return;
       }
 
@@ -1555,6 +1931,10 @@
       redoHistory.length = 0;
       isDeleteDragging = false;
       stopDeleteHold();
+      dieOneInput.value = "0";
+      dieTwoInput.value = "0";
+      cubeValueInput.value = "0";
+      diceSnapshot = { die1: "0", die2: "0", cube: "0" };
       renderBoard();
     }
 
@@ -1938,15 +2318,49 @@
       arePointLabelsVisible = !arePointLabelsVisible;
       syncPointLabelsVisibility();
     });
-    dieOneInput.addEventListener("change", renderBoard);
-    dieTwoInput.addEventListener("change", renderBoard);
-    rollDiceBtn.addEventListener("click", () => {
-      dieOneInput.value = String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1));
-      dieTwoInput.value = String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1));
-      renderBoard();
+    dieOneInput.addEventListener("change", () => {
+      recordDiceCubeChangeIfNeeded();
     });
-    cubeValueInput.addEventListener("change", renderBoard);
+    dieTwoInput.addEventListener("change", () => {
+      recordDiceCubeChangeIfNeeded();
+    });
+    rollDiceBtn.addEventListener("click", () => {
+      const next = {
+        die1: String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1)),
+        die2: String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1)),
+        cube: String(cubeValueInput.value)
+      };
+      recordEditAction({
+        type: "diceCube",
+        prev: { ...diceSnapshot },
+        next
+      });
+      dieOneInput.value = next.die1;
+      dieTwoInput.value = next.die2;
+      renderBoard();
+      syncDiceSnapshotFromInputs();
+    });
+    cubeValueInput.addEventListener("change", () => {
+      recordDiceCubeChangeIfNeeded();
+    });
     exportPngBtn.addEventListener("click", savePng);
+    paletteMenuBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      setPaletteMenuOpen(paletteMenuDropdown.hidden);
+    });
+    document.addEventListener("mousedown", (event) => {
+      if (!paletteMenuDropdown || paletteMenuDropdown.hidden) {
+        return;
+      }
+      const t = event.target;
+      if (!(t instanceof Node)) {
+        return;
+      }
+      if (paletteMenuBtn && paletteMenuBtn.parentElement.contains(t)) {
+        return;
+      }
+      setPaletteMenuOpen(false);
+    });
     flipBoardBtn.addEventListener("click", () => {
       isBoardFlipped = !isBoardFlipped;
       applyBoardFlip();
@@ -1986,6 +2400,12 @@
       renderBoard();
     });
     window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && paletteMenuDropdown && !paletteMenuDropdown.hidden) {
+        event.preventDefault();
+        setPaletteMenuOpen(false);
+        paletteMenuBtn.focus();
+        return;
+      }
       const key = event.key.toLowerCase();
       const isUndoKey = (event.ctrlKey || event.metaKey) && !event.shiftKey && (key === "z" || key === "я");
       const isRedoKey = (event.ctrlKey || event.metaKey) && event.shiftKey && (key === "z" || key === "я");
@@ -2012,6 +2432,7 @@
       undoLastEdit();
     });
 
+    initBoardPaletteFromStorage();
     createPointLabels();
     createHitZones();
     syncPointLabelsVisibility();
@@ -2019,6 +2440,7 @@
     applyMode("white");
     applyBoardFlip();
     renderBoard();
+    syncDiceSnapshotFromInputs();
   </script>
 </body>
 </html>
