@@ -52,12 +52,19 @@
       body {
         align-items: stretch;
       }
+
+      #boardSvg {
+        align-self: center;
+      }
     }
 
     #boardSvg {
       width: 808px;
       height: auto;
       display: block;
+      margin: 0 auto;
+      align-self: center;
+      max-width: 100%;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
@@ -76,6 +83,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       user-select: none;
       padding: 6px 8px;
@@ -117,6 +125,21 @@
       background: var(--ui-active);
     }
 
+    #togglePointLabelsBtn:active {
+      background: var(--ui-btn);
+      border-color: var(--ui-btn-border);
+      box-shadow: none;
+    }
+
+    #togglePointLabelsBtn:focus {
+      outline: none;
+    }
+
+    #togglePointLabelsBtn:focus-visible {
+      outline: 2px solid var(--ui-btn-border);
+      outline-offset: 2px;
+    }
+
     .controls {
       margin-top: 12px;
       display: grid;
@@ -151,6 +174,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: center;
       gap: 8px;
     }
 
@@ -211,7 +235,7 @@
     /* :hover on touch (first tap) stole the gesture; only dim on real hover. */
     @media (hover: hover) and (pointer: fine) {
       .hover-zone:hover {
-        opacity: 0.23;
+        opacity: 0.075;
       }
     }
 
@@ -283,14 +307,14 @@
       <button id="exportPngBtn" type="button">PNG 💾</button>
       <button id="flipBoardBtn" type="button">Разворот 🔄</button>
       <button id="togglePointLabelsBtn" type="button">Поля 🔢</button>
-      <button id="zoomOutBtn" type="button">Меньше 🔍</button>
-      <button id="zoomInBtn" type="button">Больше 🔎</button>
+      <button id="zoomOutBtn" type="button">– 🔍</button>
+      <button id="zoomInBtn" type="button">+ 🔎</button>
     </div>
 
     <div class="actions actions--top">
-      <button id="setupLongBtn" type="button">Длинные ⚡</button>
-      <button id="setupShortBtn" type="button">Короткие ⚡</button>
-      <button id="clearBtn" type="button">Clear ❌</button>
+      <button id="setupLongBtn" type="button">Длинные⚡</button>
+      <button id="setupShortBtn" type="button">Короткие⚡</button>
+      <button id="clearBtn" type="button">Очистить❌</button>
     </div>
 
     <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="159 0 808 558" width="808" height="558">
@@ -354,12 +378,12 @@
 
     <div class="controls">
       <div class="row">
-        <button id="modeMoveBtn" class="mode-btn" type="button" data-mode="move">Move 👆🏻</button>
-        <button id="modeLinesBtn" class="mode-btn" type="button" data-mode="lines">Lines ↪</button>
-        <button id="modeWhiteBtn" class="mode-btn active" type="button" data-mode="white">+ Add <span class="checker-icon checker-icon--white"></span></button>
-        <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">+ Add <span class="checker-icon checker-icon--black"></span></button>
-        <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Delete 🗑️</button>
-        <button id="backBtn" class="mode-btn" type="button">Back ↩️</button>
+        <button id="modeMoveBtn" class="mode-btn" type="button" data-mode="move">Ход 👆🏻</button>
+        <button id="modeLinesBtn" class="mode-btn" type="button" data-mode="lines">◀︎━▶︎</button>
+        <button id="modeWhiteBtn" class="mode-btn active" type="button" data-mode="white">++ <span class="checker-icon checker-icon--white"></span></button>
+        <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">++ <span class="checker-icon checker-icon--black"></span></button>
+        <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Стереть🗑️</button>
+        <button id="backBtn" class="mode-btn" type="button">Вернуть↩️</button>
       </div>
     </div>
 
@@ -757,7 +781,6 @@
 
     function syncPointLabelsVisibility() {
       pointLabelsLayer.setAttribute("visibility", arePointLabelsVisible ? "visible" : "hidden");
-      togglePointLabelsBtn.classList.toggle("active", arePointLabelsVisible);
     }
 
     function drawDie(x, y, value) {
@@ -1564,6 +1587,7 @@
       hitZonesLayer.replaceChildren();
       const rectWidth = 47.167;
       const rectHeight = 513 / 2;
+      const hitZoneCornerRadius = 6;
       const zoneLeftOffset = rectWidth / 2;
       const topZoneY = 22;
       const bottomZoneY = 535 - rectHeight;
@@ -1574,6 +1598,8 @@
         rect.setAttribute("y", String(point.direction === 1 ? topZoneY : bottomZoneY));
         rect.setAttribute("width", String(rectWidth));
         rect.setAttribute("height", String(rectHeight));
+        rect.setAttribute("rx", String(hitZoneCornerRadius));
+        rect.setAttribute("ry", String(hitZoneCornerRadius));
         rect.setAttribute("class", "hover-zone");
         const pointId = String(pointIndex);
         rect.dataset.pointIndex = pointId;
@@ -1622,6 +1648,8 @@
       barTopRect.setAttribute("y", String(topZoneY));
       barTopRect.setAttribute("width", String(rectWidth));
       barTopRect.setAttribute("height", String(rectHeight));
+      barTopRect.setAttribute("rx", String(hitZoneCornerRadius));
+      barTopRect.setAttribute("ry", String(hitZoneCornerRadius));
       barTopRect.setAttribute("class", "hover-zone");
       barTopRect.dataset.pointIndex = "bar-top";
       barTopRect.addEventListener("mousedown", (event) => {
@@ -1651,6 +1679,8 @@
       barBottomRect.setAttribute("y", String(bottomZoneY));
       barBottomRect.setAttribute("width", String(rectWidth));
       barBottomRect.setAttribute("height", String(rectHeight));
+      barBottomRect.setAttribute("rx", String(hitZoneCornerRadius));
+      barBottomRect.setAttribute("ry", String(hitZoneCornerRadius));
       barBottomRect.setAttribute("class", "hover-zone");
       barBottomRect.dataset.pointIndex = "bar-bottom";
       barBottomRect.addEventListener("mousedown", (event) => {
