@@ -322,13 +322,14 @@
     }
 
     .value-chip .control-like {
-      height: 24px;
+      height: 28px;
       min-width: 58px;
-      padding: 2px 6px;
+      padding: 4px 4px;
       border: 1px solid var(--ui-input-border);
-      border-radius: 4px;
+      border-radius: 6px;
       background: var(--ui-chip-inner);
       color: var(--ui-text);
+      line-height: var(--panel-line-height);
     }
 
     .palette-select-wrap {
@@ -559,7 +560,7 @@
             <option value="6">6</option>
           </select>
         </label>
-        <button id="rollDiceBtn" class="mode-btn" type="button">Бросить 🎲</button>
+        <button id="rollDiceBtn" class="mode-btn" type="button">🎲👋</button>
       </div>
     </div>
 
@@ -583,12 +584,13 @@
     const paletteMenuBtn = document.getElementById("paletteMenuBtn");
     const paletteMenuDropdown = document.getElementById("paletteMenuDropdown");
     const BOARD_PALETTE_STORAGE_KEY = "sheshbesh-board-palette";
-    const PALETTE_MENU_ORDER = ["classic", "maket", "nightBlue", "menu"];
+    const PALETTE_MENU_ORDER = ["classic", "maket", "nightBlue", "menu", "lightWood"];
     const PALETTE_OPTION_LABELS = {
       classic: "Классика",
       maket: "По макету",
       nightBlue: "Ночная синяя",
-      menu: "Меню"
+      menu: "Меню",
+      lightWood: "Светлое дерево"
     };
 
     const boardPalettes = {
@@ -665,6 +667,25 @@
         cubeFill: "#8657a7",
         cubeStroke: "#9f744a",
         cubeText: "#ffffff"
+      },
+      /** Светлое дерево: бук/дуб, тёплые бежи и мёд */
+      lightWood: {
+        frame: "#b8966f",
+        frameStroke: "#4e3d2a",
+        field: "#d8c4a8",
+        triA: "#f0e4d2",
+        triB: "#cfa06a",
+        corner: "#b8966f",
+        rail: "#7d6346",
+        checkerWhiteFill: "#fffef8",
+        checkerWhiteStroke: "#9a7b58",
+        checkerWhiteText: "#3d3128",
+        checkerBlackFill: "#35261c",
+        checkerBlackStroke: "#c4a574",
+        checkerBlackText: "#f0e4d2",
+        cubeFill: "#cfa06a",
+        cubeStroke: "#8b6f4a",
+        cubeText: "#fffef8"
       }
     };
 
