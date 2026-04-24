@@ -39,6 +39,8 @@
       width: 808px;
       height: auto;
       display: block;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     svg text {
@@ -157,10 +159,16 @@
       opacity: 0;
       cursor: inherit;
       transition: opacity 120ms ease-out;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
     }
 
-    .hover-zone:hover {
-      opacity: 0.23;
+    /* :hover on touch (first tap) stole the gesture; only dim on real hover. */
+    @media (hover: hover) and (pointer: fine) {
+      .hover-zone:hover {
+        opacity: 0.23;
+      }
     }
 
     .scale-input {
