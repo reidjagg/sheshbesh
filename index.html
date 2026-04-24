@@ -134,6 +134,7 @@
       opacity: 0;
       cursor: inherit;
       transition: opacity 120ms ease-out;
+      touch-action: manipulation;
     }
 
     .hover-zone:hover {
@@ -216,6 +217,7 @@
         <button id="modeWhiteBtn" class="mode-btn active" type="button" data-mode="white">+ Add <span class="checker-icon checker-icon--white"></span></button>
         <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">+ Add <span class="checker-icon checker-icon--black"></span></button>
         <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Delete 🗑️</button>
+        <button id="backBtn" class="mode-btn" type="button">Back ↩️</button>
       </div>
       <div class="row">
         <label><input id="showPointLabelsInput" type="checkbox" /> Номера полей</label>
@@ -257,6 +259,7 @@
     const boardScaleNumber = document.getElementById("boardScaleNumber");
     const exportPngBtn = document.getElementById("exportPngBtn");
     const flipBoardBtn = document.getElementById("flipBoardBtn");
+    const backBtn = document.getElementById("backBtn");
     const showDiceInput = document.getElementById("showDiceInput");
     const diceSideInput = document.getElementById("diceSideInput");
     const dieOneInput = document.getElementById("dieOneInput");
@@ -281,6 +284,7 @@
     let activeDeletePointIndex = null;
     let deleteHoldTimer = null;
     let currentBoardScale = 45;
+    const editHistory = [];
 
     const leftXs = [273.583, 320.75, 367.917, 415.083, 462.25, 509.417];
     const rightXs = [614.583, 661.75, 708.917, 756.083, 803.25, 850.417];
@@ -523,10 +527,10 @@
       const stack = pointStacks[pointIndex];
       if (editMode === "white") {
         stack.push("white");
+        editHistory.push({ type: "add", pointIndex, color: "white" });
       } else if (editMode === "black") {
         stack.push("black");
-      } else if (stack.length > 0) {
-        stack.pop();
+        editHistory.push({ type: "add", pointIndex, color: "black" });
       }
       renderBoard();
     }
@@ -536,7 +540,25 @@
       if (stack.length === 0) {
         return;
       }
-      stack.pop();
+      const deletedColor = stack.pop();
+      editHistory.push({ type: "delete", pointIndex, color: deletedColor });
+      renderBoard();
+    }
+
+    function undoLastEdit() {
+      const lastAction = editHistory.pop();
+      if (!lastAction) {
+        return;
+      }
+
+      const stack = pointStacks[lastAction.pointIndex];
+      if (lastAction.type === "add") {
+        if (stack.length > 0) {
+          stack.pop();
+        }
+      } else if (lastAction.type === "delete") {
+        stack.push(lastAction.color);
+      }
       renderBoard();
     }
 
@@ -577,17 +599,21 @@
         rect.setAttribute("height", String(rectHeight));
         rect.setAttribute("class", "hover-zone");
         rect.dataset.pointIndex = String(pointIndex + 1);
-        rect.addEventListener("mousedown", (event) => {
-          if (editMode !== "delete" || event.button !== 0) {
+        rect.addEventListener("pointerdown", (event) => {
+          if (!event.isPrimary) {
             return;
           }
-          isDeleteDragging = true;
-          deleteOneChecker(pointIndex);
-          startDeleteHold(pointIndex);
+          if (editMode === "delete") {
+            isDeleteDragging = true;
+            deleteOneChecker(pointIndex);
+            startDeleteHold(pointIndex);
+          } else {
+            editPoint(pointIndex);
+          }
           event.preventDefault();
         });
-        rect.addEventListener("mouseenter", (event) => {
-          if (editMode !== "delete" || !isDeleteDragging || (event.buttons & 1) !== 1) {
+        rect.addEventListener("pointerenter", (event) => {
+          if (editMode !== "delete" || !isDeleteDragging || !event.isPrimary) {
             return;
           }
           activeDeletePointIndex = pointIndex;
@@ -599,11 +625,6 @@
           }
           if (activeDeletePointIndex === pointIndex) {
             activeDeletePointIndex = null;
-          }
-        });
-        rect.addEventListener("click", () => {
-          if (editMode !== "delete") {
-            editPoint(pointIndex);
           }
         });
         hitZonesLayer.appendChild(rect);
@@ -731,6 +752,7 @@
       isBoardFlipped = !isBoardFlipped;
       applyBoardFlip();
     });
+    backBtn.addEventListener("click", undoLastEdit);
 
     Object.entries(modeButtons).forEach(([mode, btn]) => {
       btn.addEventListener("click", () => {
@@ -742,6 +764,14 @@
       });
     });
     window.addEventListener("mouseup", () => {
+      isDeleteDragging = false;
+      stopDeleteHold();
+    });
+    window.addEventListener("pointerup", () => {
+      isDeleteDragging = false;
+      stopDeleteHold();
+    });
+    window.addEventListener("pointercancel", () => {
       isDeleteDragging = false;
       stopDeleteHold();
     });
