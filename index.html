@@ -241,7 +241,7 @@
       <button id="exportPngBtn" type="button">Экспорт PNG</button>
       <button id="flipBoardBtn" type="button">Перевернуть доску</button>
       <label>Масштаб %
-        <input id="boardScaleNumber" class="scale-input" type="number" min="20" max="100" step="1" value="60" />
+        <input id="boardScaleNumber" class="scale-input" type="number" min="20" max="100" step="1" value="45" />
       </label>
     </div>
   </div>
@@ -779,7 +779,7 @@
     createPointLabels();
     createHitZones();
     syncPointLabelsVisibility();
-    applyBoardScale(60, { commitToInput: true });
+    applyBoardScale(45, { commitToInput: true });
     applyMode("white");
     applyBoardFlip();
     renderBoard();
