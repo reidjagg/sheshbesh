@@ -11,12 +11,15 @@
       --text: #1f1f1f;
       --border: #d8d2c8;
       --accent: #356d39;
+      --panel-font: Arial, Helvetica, sans-serif;
+      --panel-font-size: 14px;
+      --panel-line-height: 1.35;
     }
 
     body {
       margin: 0;
       padding: 16px;
-      font-family: Arial, sans-serif;
+      font-family: var(--panel-font);
       background: var(--bg);
       color: var(--text);
       user-select: none;
@@ -33,6 +36,13 @@
       padding: 12px;
       overflow: auto;
       box-sizing: border-box;
+    }
+
+    @media (max-width: 768px) {
+      .board-wrap {
+        width: 100%;
+        max-width: 100%;
+      }
     }
 
     .board-wrap svg {
@@ -63,6 +73,9 @@
       border: 1px solid #ece7de;
       border-radius: 8px;
       background: #fcfbf8;
+      font-family: var(--panel-font);
+      font-size: var(--panel-font-size);
+      line-height: var(--panel-line-height);
     }
 
     .actions--top {
@@ -79,7 +92,7 @@
       border-radius: 6px;
       background: #f7f3ea;
       cursor: pointer;
-      font-size: 14px;
+      font: inherit;
     }
 
     .actions button:hover {
@@ -94,8 +107,10 @@
       border: 1px solid #ece7de;
       border-radius: 8px;
       background: #fcfbf8;
-      font-size: 14px;
       user-select: none;
+      font-family: var(--panel-font);
+      font-size: var(--panel-font-size);
+      line-height: var(--panel-line-height);
     }
 
     .dice-panel {
@@ -106,8 +121,10 @@
       border: 1px solid #ece7de;
       border-radius: 8px;
       background: #fcfbf8;
-      font-size: 14px;
       user-select: none;
+      font-family: var(--panel-font);
+      font-size: var(--panel-font-size);
+      line-height: var(--panel-line-height);
     }
 
     .row {
@@ -127,6 +144,7 @@
       background: #f7f3ea;
       cursor: pointer;
       user-select: none;
+      font: inherit;
     }
 
     .mode-btn.active {
@@ -194,8 +212,8 @@
       border-radius: 6px;
       background: #f7f3ea;
       color: #1f1f1f;
-      font-size: 14px;
       box-sizing: border-box;
+      font: inherit;
     }
 
     select.control-like {
@@ -216,9 +234,9 @@
       border-radius: 6px;
       background: #f7f3ea;
       color: #1f1f1f;
-      font-size: 14px;
-      line-height: 1;
       box-sizing: border-box;
+      font: inherit;
+      line-height: var(--panel-line-height);
     }
 
     .value-chip .control-like {
@@ -228,7 +246,6 @@
       border: 1px solid #c8c1b4;
       border-radius: 4px;
       background: #fff;
-      font-size: 14px;
     }
   </style>
 </head>
@@ -1604,10 +1621,15 @@
       currentBoardScale = safeValue;
     }
 
-    function getMaxScreenScale() {
+    function getAvailableBoardWidth() {
       const bodyHorizontalPadding = 32;
       const boardWrapHorizontalPadding = 24;
-      const availableWidth = Math.max(240, window.innerWidth - bodyHorizontalPadding - boardWrapHorizontalPadding);
+      const boardWrapBorder = 2;
+      return Math.max(1, window.innerWidth - bodyHorizontalPadding - boardWrapHorizontalPadding - boardWrapBorder);
+    }
+
+    function getMaxScreenScale() {
+      const availableWidth = getAvailableBoardWidth();
       const fitScale = Math.floor((availableWidth / baseBoardWidth) * 100);
       return Math.max(20, fitScale);
     }
@@ -1617,12 +1639,7 @@
       if (!isMobile) {
         return 60;
       }
-
-      const bodyHorizontalPadding = 32;
-      const boardWrapHorizontalPadding = 24;
-      const availableWidth = Math.max(240, window.innerWidth - bodyHorizontalPadding - boardWrapHorizontalPadding);
-      const fitScale = Math.round((availableWidth / baseBoardWidth) * 100);
-      return Math.max(20, Math.min(100, fitScale));
+      return getMaxScreenScale();
     }
 
     function applyBoardFlip() {
