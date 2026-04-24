@@ -241,7 +241,7 @@
       <button id="exportPngBtn" type="button">Экспорт PNG</button>
       <button id="flipBoardBtn" type="button">Перевернуть доску</button>
       <label>Масштаб %
-        <input id="boardScaleNumber" class="scale-input" type="number" min="20" max="100" step="1" value="45" />
+        <input id="boardScaleNumber" class="scale-input" type="number" min="20" max="100" step="1" value="60" />
       </label>
     </div>
   </div>
@@ -283,7 +283,7 @@
     let isDeleteDragging = false;
     let activeDeletePointIndex = null;
     let deleteHoldTimer = null;
-    let currentBoardScale = 45;
+    let currentBoardScale = 60;
     const editHistory = [];
 
     const leftXs = [273.583, 320.75, 367.917, 415.083, 462.25, 509.417];
@@ -661,6 +661,19 @@
       }
     }
 
+    function getInitialBoardScale() {
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+      if (!isMobile) {
+        return 60;
+      }
+
+      const bodyHorizontalPadding = 32;
+      const boardWrapHorizontalPadding = 24;
+      const availableWidth = Math.max(240, window.innerWidth - bodyHorizontalPadding - boardWrapHorizontalPadding);
+      const fitScale = Math.round((availableWidth / baseBoardWidth) * 100);
+      return Math.max(20, Math.min(100, fitScale));
+    }
+
     function applyBoardFlip() {
       if (isBoardFlipped) {
         const bbox = boardContent.getBBox();
@@ -779,7 +792,7 @@
     createPointLabels();
     createHitZones();
     syncPointLabelsVisibility();
-    applyBoardScale(45, { commitToInput: true });
+    applyBoardScale(getInitialBoardScale(), { commitToInput: true });
     applyMode("white");
     applyBoardFlip();
     renderBoard();
