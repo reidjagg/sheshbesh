@@ -52,12 +52,23 @@
     }
 
     .actions {
-      margin-top: 10px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 8px;
       user-select: none;
+      padding: 10px;
+      border: 1px solid #ece7de;
+      border-radius: 8px;
+      background: #fcfbf8;
+    }
+
+    .actions--top {
+      margin-bottom: 12px;
+    }
+
+    .actions--bottom {
+      margin-top: 12px;
     }
 
     .actions button {
@@ -74,6 +85,18 @@
     }
 
     .controls {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #ece7de;
+      border-radius: 8px;
+      background: #fcfbf8;
+      font-size: 14px;
+      user-select: none;
+    }
+
+    .dice-panel {
       margin-top: 12px;
       display: grid;
       gap: 10px;
@@ -147,6 +170,7 @@
       border-radius: 4px;
     }
 
+
     input[type="number"],
     select {
       padding: 4px 6px;
@@ -154,12 +178,72 @@
       border-radius: 4px;
       background: #fff;
     }
+
+    .control-like {
+      height: 34px;
+      padding: 6px 10px;
+      border: 1px solid #b8b0a2;
+      border-radius: 6px;
+      background: #f7f3ea;
+      color: #1f1f1f;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    select.control-like {
+      min-width: 72px;
+      cursor: pointer;
+    }
+
+    input.control-like {
+      width: 90px;
+    }
+
+    .value-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid #b8b0a2;
+      border-radius: 6px;
+      background: #f7f3ea;
+      color: #1f1f1f;
+      font-size: 14px;
+      line-height: 1;
+      box-sizing: border-box;
+    }
+
+    .value-chip .control-like {
+      height: 24px;
+      min-width: 58px;
+      padding: 2px 6px;
+      border: 1px solid #c8c1b4;
+      border-radius: 4px;
+      background: #fff;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <div class="board-wrap" id="boardWrap">
+    <div class="actions actions--bottom">
+      <button id="exportPngBtn" type="button">PNG 💾</button>
+      <button id="flipBoardBtn" type="button">Разворот 🔄</button>
+      <button id="togglePointLabelsBtn" type="button">Поля 🔢</button>
+      <button id="zoomOutBtn" type="button">Меньше 🔍</button>
+      <button id="zoomInBtn" type="button">Больше 🔎</button>
+    </div>
+
+    <div class="actions actions--top">
+      <button id="setupLongBtn" type="button">Длинные нарды</button>
+      <button id="setupShortBtn" type="button">Короткие нарды</button>
+      <button id="backBtn" type="button">Back ↩️</button>
+      <button id="clearBtn" type="button">Clear ❌</button>
+    </div>
+
     <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="159 0 808 558" width="808" height="558">
       <g id="boardContent">
+        <defs id="arrowDefs"></defs>
         <rect x="159" y="0" width="806" height="558" rx="20" ry="20" fill="#423122" stroke="#000" stroke-width="1"/>
         <rect x="250" y="22" width="283" height="513" fill="#4a6439"/>
         <rect x="591" y="22" width="283" height="513" fill="#4a6439"/>
@@ -204,45 +288,68 @@
         <rect x="182" y="21" rx="2" ry="2" width="47" height="140" fill="#38291d"/>
         <rect x="895" y="395" rx="2" ry="2" width="47" height="140" fill="#38291d"/>
 
+        <g id="arrowsLayer" pointer-events="none"></g>
         <g id="checkersLayer"></g>
+        <g id="countLabelsLayer"></g>
+        <g id="moveAnimationLayer" pointer-events="none"></g>
+        <g id="lineSelectionLayer" pointer-events="none"></g>
         <g id="pointLabelsLayer" visibility="hidden"></g>
         <g id="extrasLayer"></g>
         <g id="hitZonesLayer"></g>
+        <g id="arrowHitLayer" pointer-events="none"></g>
       </g>
     </svg>
 
     <div class="controls">
       <div class="row">
+        <button id="modeMoveBtn" class="mode-btn" type="button" data-mode="move">Move 👆🏻</button>
+        <button id="modeLinesBtn" class="mode-btn" type="button" data-mode="lines">Lines ↪</button>
         <button id="modeWhiteBtn" class="mode-btn active" type="button" data-mode="white">+ Add <span class="checker-icon checker-icon--white"></span></button>
         <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">+ Add <span class="checker-icon checker-icon--black"></span></button>
         <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Delete 🗑️</button>
-        <button id="backBtn" class="mode-btn" type="button">Back ↩️</button>
-      </div>
-      <div class="row">
-        <label><input id="showPointLabelsInput" type="checkbox" /> Номера полей</label>
-        <label><input id="showDiceInput" type="checkbox" /> Кубики</label>
-        <label><input id="showCubeInput" type="checkbox" /> Куб удвоения</label>
-      </div>
-      <div class="row">
-        <label>Сторона
-          <select id="diceSideInput">
-            <option value="right">справа</option>
-            <option value="left">слева</option>
-          </select>
-        </label>
-        <label>D1 <input id="dieOneInput" type="number" min="1" max="6" step="1" value="5" /></label>
-        <label>D2 <input id="dieTwoInput" type="number" min="1" max="6" step="1" value="3" /></label>
-        <label>Куб <input id="cubeValueInput" type="number" min="2" step="1" value="64" /></label>
       </div>
     </div>
 
-    <div class="actions">
-      <button id="exportPngBtn" type="button">Экспорт PNG</button>
-      <button id="flipBoardBtn" type="button">Перевернуть доску</button>
-      <label>Масштаб %
-        <input id="boardScaleNumber" class="scale-input" type="number" min="20" max="100" step="1" value="60" />
-      </label>
+    <div class="dice-panel">
+      <div class="row">
+        <label class="value-chip">Куб
+          <select id="cubeValueInput" class="control-like">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            <option value="32">32</option>
+            <option value="64">64</option>
+          </select>
+        </label>
+        <label class="value-chip"> 🎲 
+          <select id="dieOneInput" class="control-like">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </label>
+        <label class="value-chip"> 🎲 
+          <select id="dieTwoInput" class="control-like">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </label>
+        <button id="rollDiceBtn" class="mode-btn" type="button">Бросить 🎲</button>
+      </div>
     </div>
+
   </div>
 
   <script>
@@ -250,26 +357,36 @@
     const boardWrap = document.getElementById("boardWrap");
     const boardSvg = document.getElementById("boardSvg");
     const boardContent = document.getElementById("boardContent");
+    const arrowDefs = document.getElementById("arrowDefs");
     const checkersLayer = document.getElementById("checkersLayer");
+    const countLabelsLayer = document.getElementById("countLabelsLayer");
+    const moveAnimationLayer = document.getElementById("moveAnimationLayer");
+    const lineSelectionLayer = document.getElementById("lineSelectionLayer");
     const pointLabelsLayer = document.getElementById("pointLabelsLayer");
     const extrasLayer = document.getElementById("extrasLayer");
+    const arrowsLayer = document.getElementById("arrowsLayer");
     const hitZonesLayer = document.getElementById("hitZonesLayer");
+    const arrowHitLayer = document.getElementById("arrowHitLayer");
 
-    const boardScaleNumber = document.getElementById("boardScaleNumber");
+    const zoomOutBtn = document.getElementById("zoomOutBtn");
+    const zoomInBtn = document.getElementById("zoomInBtn");
     const exportPngBtn = document.getElementById("exportPngBtn");
     const flipBoardBtn = document.getElementById("flipBoardBtn");
+    const togglePointLabelsBtn = document.getElementById("togglePointLabelsBtn");
     const backBtn = document.getElementById("backBtn");
-    const showDiceInput = document.getElementById("showDiceInput");
-    const diceSideInput = document.getElementById("diceSideInput");
+    const clearBtn = document.getElementById("clearBtn");
+    const setupLongBtn = document.getElementById("setupLongBtn");
+    const setupShortBtn = document.getElementById("setupShortBtn");
     const dieOneInput = document.getElementById("dieOneInput");
     const dieTwoInput = document.getElementById("dieTwoInput");
-    const showCubeInput = document.getElementById("showCubeInput");
+    const rollDiceBtn = document.getElementById("rollDiceBtn");
     const cubeValueInput = document.getElementById("cubeValueInput");
-    const showPointLabelsInput = document.getElementById("showPointLabelsInput");
 
     const modeButtons = {
       white: document.getElementById("modeWhiteBtn"),
       black: document.getElementById("modeBlackBtn"),
+      lines: document.getElementById("modeLinesBtn"),
+      move: document.getElementById("modeMoveBtn"),
       delete: document.getElementById("modeDeleteBtn")
     };
 
@@ -277,20 +394,39 @@
     const radius = 21.284;
     const defaultStep = radius * 2 + 1;
     const maxTowerSpan = defaultStep * 4;
+    const cellWidth = 47.167;
+    const arrowStartWidth = cellWidth;
+    const arrowEndWidth = cellWidth * 0.1;
     let isBoardFlipped = false;
+    let arePointLabelsVisible = false;
     let editMode = "white";
     let isDeleteDragging = false;
     let activeDeletePointIndex = null;
     let deleteHoldTimer = null;
     let currentBoardScale = 60;
     const editHistory = [];
+    const redoHistory = [];
+    const arrows = [];
+    let nextArrowId = 1;
+    let lineStartPointIndex = null;
+    let moveStartPointId = null;
+    let isMoveAnimating = false;
+    let moveInFlight = null;
+    const pendingTowerShiftAnimations = new Map();
+    const barStacks = {
+      top: [],
+      bottom: []
+    };
+    const barX = 562;
+    const barTopY = 115.333;
+    const barBottomY = 441.667;
 
     const leftXs = [273.583, 320.75, 367.917, 415.083, 462.25, 509.417];
     const rightXs = [614.583, 661.75, 708.917, 756.083, 803.25, 850.417];
     const topStartY = 45.583;
     const bottomStartY = 511.417;
-    const pointLabelTopY = "14";
-    const pointLabelBottomY = "546";
+    const pointLabelTopY = "11.5";
+    const pointLabelBottomY = "546.5";
 
     const pointDefs = [
       ...[...rightXs].reverse().map((x) => ({ x, startY: topStartY, direction: 1 })),
@@ -311,9 +447,19 @@
       )}`;
     }
 
+    function whiteArrowCursorSvg() {
+      return `data:image/svg+xml;utf8,${encodeURIComponent(
+        `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'>
+          <path d='M2 2 L21 11 L13 12.5 L16.2 22 L12.6 23 L9.4 13.4 L2 2 Z' fill='#ffffff' stroke='#1f1f1f' stroke-width='1.2' stroke-linejoin='round'/>
+        </svg>`
+      )}`;
+    }
+
     const modeCursor = {
       white: `url("${cursorSvg("#ffffff", "#222222")}") 11 11, pointer`,
       black: `url("${cursorSvg("#101018", "#c7a473")}") 11 11, pointer`,
+      lines: `url("${whiteArrowCursorSvg()}") 2 2, pointer`,
+      move: "default",
       delete: `url("${cursorSvg("#ffd9d9", "#994444")}") 11 11, pointer`
     };
 
@@ -323,6 +469,14 @@
         btn.classList.toggle("active", name === mode);
       });
       boardWrap.style.cursor = modeCursor[mode];
+      arrowHitLayer.setAttribute("pointer-events", mode === "delete" ? "auto" : "none");
+      if (mode !== "lines") {
+        lineStartPointIndex = null;
+      }
+      if (mode !== "move") {
+        moveStartPointId = null;
+      }
+      renderBoard();
     }
 
     function checkerStyleForColor(color) {
@@ -364,7 +518,17 @@
       text.setAttribute("font-weight", "bold");
       text.textContent = String(count);
       applyTextFlipCompensation(text);
-      checkersLayer.appendChild(text);
+      countLabelsLayer.appendChild(text);
+    }
+
+    function getTowerStep(count) {
+      if (count <= 1) {
+        return defaultStep;
+      }
+      if (count <= 5) {
+        return defaultStep;
+      }
+      return Math.min(defaultStep, maxTowerSpan / (count - 1));
     }
 
     function drawTower(pointIndex, stack) {
@@ -374,11 +538,19 @@
       const point = pointDefs[pointIndex];
       const topColor = stack[stack.length - 1];
       const style = checkerStyleForColor(topColor);
-      const step = stack.length <= 5 ? defaultStep : Math.min(defaultStep, maxTowerSpan / (stack.length - 1));
+      const step = getTowerStep(stack.length);
       let topX = point.x;
       let topY = point.startY;
+      const animation = pendingTowerShiftAnimations.get(pointIndex) || null;
+      const oldStep = animation ? getTowerStep(animation.fromCount) : step;
 
       for (let i = 0; i < stack.length; i += 1) {
+        const isHiddenMovingTargetChecker = moveInFlight
+          && moveInFlight.toPointId === String(pointIndex)
+          && i === stack.length - 1;
+        if (isHiddenMovingTargetChecker) {
+          continue;
+        }
         const cx = point.x;
         const cy = point.startY + point.direction * i * step;
         const currentStyle = checkerStyleForColor(stack[i]);
@@ -389,14 +561,93 @@
         circle.setAttribute("cy", String(cy));
         circle.setAttribute("r", String(radius));
         circle.setAttribute("fill", currentStyle.fill);
-        circle.setAttribute("stroke", currentStyle.stroke);
-        circle.setAttribute("stroke-width", "3");
+        const isMoveSelected =
+          editMode === "move" &&
+          moveStartPointId === String(pointIndex) &&
+          i === stack.length - 1;
+        circle.setAttribute("stroke", isMoveSelected ? "#0077FF" : currentStyle.stroke);
+        circle.setAttribute("stroke-width", isMoveSelected ? "5" : "3");
+        if (isMoveSelected) {
+          circle.setAttribute("stroke-dasharray", "9 6");
+          const spin = document.createElementNS(svgNs, "animateTransform");
+          spin.setAttribute("attributeName", "transform");
+          spin.setAttribute("type", "rotate");
+          spin.setAttribute("from", `0 ${cx} ${cy}`);
+          spin.setAttribute("to", `360 ${cx} ${cy}`);
+          spin.setAttribute("dur", "2800ms");
+          spin.setAttribute("repeatCount", "indefinite");
+          circle.appendChild(spin);
+        }
+        if (animation) {
+          let fromCy = cy;
+          if (i < animation.fromCount) {
+            fromCy = point.startY + point.direction * i * oldStep;
+          } else {
+            const prevTopIndex = Math.max(0, animation.fromCount - 1);
+            fromCy = point.startY + point.direction * prevTopIndex * oldStep;
+          }
+          const deltaY = fromCy - cy;
+          if (Math.abs(deltaY) > 0.01) {
+            circle.style.transform = `translateY(${deltaY}px)`;
+            circle.style.transition = "none";
+            requestAnimationFrame(() => {
+              circle.style.transition = "transform 500ms cubic-bezier(0.22, 1, 0.36, 1)";
+              circle.style.transform = "translateY(0px)";
+            });
+          }
+        }
         checkersLayer.appendChild(circle);
       }
 
       if (stack.length > 5) {
-        addCountLabel(topX, topY, stack.length, style.textColor);
+        const fixedLabelY = point.startY + point.direction * maxTowerSpan;
+        addCountLabel(topX, fixedLabelY, stack.length, style.textColor);
       }
+    }
+
+    function drawBarCheckers() {
+      const barOrder = [
+        { section: "top", y: barTopY },
+        { section: "bottom", y: barBottomY }
+      ];
+
+      barOrder.forEach(({ section, y }) => {
+        const stack = barStacks[section];
+        const count = stack.length;
+        if (count === 0) {
+          return;
+        }
+        if (moveInFlight && moveInFlight.toPointId === `bar-${section}` && count === 1) {
+          return;
+        }
+        const color = stack[count - 1];
+        const style = checkerStyleForColor(color);
+        const circle = document.createElementNS(svgNs, "circle");
+        circle.setAttribute("cx", String(barX));
+        circle.setAttribute("cy", String(y));
+        circle.setAttribute("r", String(radius));
+        circle.setAttribute("fill", style.fill);
+        const isMoveSelected =
+          editMode === "move" &&
+          moveStartPointId === `bar-${section}`;
+        circle.setAttribute("stroke", isMoveSelected ? "#0077FF" : style.stroke);
+        circle.setAttribute("stroke-width", isMoveSelected ? "5" : "3");
+        if (isMoveSelected) {
+          circle.setAttribute("stroke-dasharray", "9 6");
+          const spin = document.createElementNS(svgNs, "animateTransform");
+          spin.setAttribute("attributeName", "transform");
+          spin.setAttribute("type", "rotate");
+          spin.setAttribute("from", `0 ${barX} ${y}`);
+          spin.setAttribute("to", `360 ${barX} ${y}`);
+          spin.setAttribute("dur", "2800ms");
+          spin.setAttribute("repeatCount", "indefinite");
+          circle.appendChild(spin);
+        }
+        checkersLayer.appendChild(circle);
+        if (count > 1) {
+          addCountLabel(barX, y, count, style.textColor);
+        }
+      });
     }
 
     function createPointLabels() {
@@ -418,7 +669,8 @@
     }
 
     function syncPointLabelsVisibility() {
-      pointLabelsLayer.setAttribute("visibility", showPointLabelsInput.checked ? "visible" : "hidden");
+      pointLabelsLayer.setAttribute("visibility", arePointLabelsVisible ? "visible" : "hidden");
+      togglePointLabelsBtn.classList.toggle("active", arePointLabelsVisible);
     }
 
     function drawDie(x, y, value) {
@@ -499,25 +751,371 @@
       extrasLayer.appendChild(text);
     }
 
+    function getPointTopCheckerAnchor(pointIndex) {
+      const point = pointDefs[pointIndex];
+      const stack = pointStacks[pointIndex];
+      const step = stack.length <= 5 ? defaultStep : Math.min(defaultStep, maxTowerSpan / (stack.length - 1));
+      const checkerTopY = stack.length > 0
+        ? point.startY + point.direction * (stack.length - 1) * step
+        : point.startY;
+      return { x: point.x, y: checkerTopY };
+    }
+
+    function getAnchorForArrow(targetId, isEndAnchor = false) {
+      if (targetId === "bar-top" || targetId === "bar-bottom") {
+        const stack = barStacks[targetId === "bar-top" ? "top" : "bottom"];
+        const y = targetId === "bar-top" ? barTopY : barBottomY;
+        if (stack.length > 0) {
+          if (isEndAnchor) {
+            return { x: barX, y: y - radius };
+          }
+          return { x: barX, y };
+        }
+        const emptyBarOffset = cellWidth * 0.1;
+        return { x: barX, y: isEndAnchor ? y - emptyBarOffset : y };
+      }
+
+      const pointIndex = Number(targetId);
+      if (!Number.isInteger(pointIndex) || pointIndex < 0 || pointIndex >= pointDefs.length) {
+        return { x: barX, y: 279 };
+      }
+      const point = pointDefs[pointIndex];
+      const stack = pointStacks[pointIndex];
+      if (stack.length > 0) {
+        const topChecker = getPointTopCheckerAnchor(pointIndex);
+        if (isEndAnchor) {
+          return {
+            x: topChecker.x,
+            y: topChecker.y + point.direction * radius
+          };
+        }
+        return topChecker;
+      }
+      // For empty points, end anchor sits slightly above triangle edge.
+      const emptyEndOffset = cellWidth * 0.1;
+      return {
+        x: point.x,
+        y: point.direction === 1
+          ? (isEndAnchor ? 22 + emptyEndOffset : 22)
+          : (isEndAnchor ? 535 - emptyEndOffset : 535)
+      };
+    }
+
+    function getArrowGeometry(fromTargetId, toTargetId) {
+      const from = getAnchorForArrow(fromTargetId, false);
+      const to = getAnchorForArrow(toTargetId, true);
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      const midX = (from.x + to.x) / 2;
+      const midY = (from.y + to.y) / 2;
+      const centerX = 562;
+      const centerY = 279;
+      const centerLinePoint = { x: centerX, y: from.y };
+      const toCenterLineX = centerLinePoint.x - from.x;
+      const toCenterLineY = centerLinePoint.y - from.y;
+      const toCenterLineLen = Math.hypot(toCenterLineX, toCenterLineY);
+      const startDir = toCenterLineLen > 0.001
+        ? { x: toCenterLineX / toCenterLineLen, y: toCenterLineY / toCenterLineLen }
+        : { x: dx / distance, y: dy / distance };
+      const towardCenterX = centerX - midX;
+      const towardCenterY = centerY - midY;
+      const towardCenterLen = Math.hypot(towardCenterX, towardCenterY) || 1;
+      const ux = towardCenterX / towardCenterLen;
+      const uy = towardCenterY / towardCenterLen;
+      const curve = Math.min(220, Math.max(56, distance * 0.52));
+      const baseControlX = midX + ux * (curve * 0.58);
+      const baseControlY = midY + uy * (curve * 0.58);
+      const startLock = 24;
+      const cx = (baseControlX * 0.72) + ((from.x + startDir.x * startLock) * 0.28);
+      const cy = (baseControlY * 0.72) + ((from.y + startDir.y * startLock) * 0.28);
+
+      return {
+        from,
+        control: { x: cx, y: cy },
+        end: { x: to.x, y: to.y }
+      };
+    }
+
+    function pointOnQuadratic(p0, p1, p2, t) {
+      const oneMinusT = 1 - t;
+      return {
+        x: oneMinusT * oneMinusT * p0.x + 2 * oneMinusT * t * p1.x + t * t * p2.x,
+        y: oneMinusT * oneMinusT * p0.y + 2 * oneMinusT * t * p1.y + t * t * p2.y
+      };
+    }
+
+    function tangentOnQuadratic(p0, p1, p2, t) {
+      return {
+        x: 2 * (1 - t) * (p1.x - p0.x) + 2 * t * (p2.x - p1.x),
+        y: 2 * (1 - t) * (p1.y - p0.y) + 2 * t * (p2.y - p1.y)
+      };
+    }
+
+    function createArrowShapePath(fromTargetId, toTargetId) {
+      const geometry = getArrowGeometry(fromTargetId, toTargetId);
+      const p0 = geometry.from;
+      const p1 = geometry.control;
+      const p2 = geometry.end;
+      const samples = 20;
+      const left = [];
+      const right = [];
+
+      for (let i = 0; i <= samples; i += 1) {
+        const t = i / samples;
+        const point = pointOnQuadratic(p0, p1, p2, t);
+        const tangent = tangentOnQuadratic(p0, p1, p2, t);
+        const tangentLen = Math.hypot(tangent.x, tangent.y) || 1;
+        const nx = -tangent.y / tangentLen;
+        const ny = tangent.x / tangentLen;
+        const currentWidth = arrowStartWidth + (arrowEndWidth - arrowStartWidth) * t;
+        const halfWidth = currentWidth / 2;
+        left.push({ x: point.x + nx * halfWidth, y: point.y + ny * halfWidth });
+        right.push({ x: point.x - nx * halfWidth, y: point.y - ny * halfWidth });
+      }
+
+      let d = `M ${left[0].x} ${left[0].y}`;
+      for (let i = 1; i < left.length; i += 1) {
+        d += ` L ${left[i].x} ${left[i].y}`;
+      }
+      const endRadius = arrowEndWidth / 2;
+      const endTangent = tangentOnQuadratic(p0, p1, p2, 1);
+      const endTangentLen = Math.hypot(endTangent.x, endTangent.y) || 1;
+      const tx = endTangent.x / endTangentLen;
+      const ty = endTangent.y / endTangentLen;
+      const rightEnd = right[right.length - 1];
+      const outerEnd = { x: p2.x + tx * endRadius, y: p2.y + ty * endRadius };
+      d += ` Q ${outerEnd.x} ${outerEnd.y} ${rightEnd.x} ${rightEnd.y}`;
+      for (let i = right.length - 1; i >= 0; i -= 1) {
+        d += ` L ${right[i].x} ${right[i].y}`;
+      }
+      d += " Z";
+      return d;
+    }
+
+    function drawArrows() {
+      arrowsLayer.replaceChildren();
+      arrowDefs.replaceChildren();
+      arrowHitLayer.replaceChildren();
+
+      arrows.forEach((arrow) => {
+        const geometry = getArrowGeometry(arrow.from, arrow.to);
+        const gradient = document.createElementNS(svgNs, "linearGradient");
+        const gradientId = `arrowGradient-${arrow.id}`;
+        gradient.setAttribute("id", gradientId);
+        gradient.setAttribute("gradientUnits", "userSpaceOnUse");
+        gradient.setAttribute("x1", String(geometry.from.x));
+        gradient.setAttribute("y1", String(geometry.from.y));
+        gradient.setAttribute("x2", String(geometry.end.x));
+        gradient.setAttribute("y2", String(geometry.end.y));
+        const startStop = document.createElementNS(svgNs, "stop");
+        startStop.setAttribute("offset", "0%");
+        startStop.setAttribute("stop-color", "#f0f0ff");
+        startStop.setAttribute("stop-opacity", "0");
+        const endStop = document.createElementNS(svgNs, "stop");
+        endStop.setAttribute("offset", "100%");
+        endStop.setAttribute("stop-color", "#f0f0ff");
+        endStop.setAttribute("stop-opacity", "0.4");
+        gradient.appendChild(startStop);
+        gradient.appendChild(endStop);
+        arrowDefs.appendChild(gradient);
+
+        const path = document.createElementNS(svgNs, "path");
+        path.setAttribute("d", createArrowShapePath(arrow.from, arrow.to));
+        path.setAttribute("fill", `url(#${gradientId})`);
+        path.setAttribute("pointer-events", "none");
+        arrowsLayer.appendChild(path);
+
+        const hitPath = document.createElementNS(svgNs, "path");
+        hitPath.setAttribute("d", createArrowShapePath(arrow.from, arrow.to));
+        hitPath.setAttribute("fill", "none");
+        hitPath.setAttribute("stroke", "transparent");
+        hitPath.setAttribute("stroke-width", String(Math.max(16, cellWidth * 0.45)));
+        hitPath.setAttribute("pointer-events", editMode === "delete" ? "stroke" : "none");
+        hitPath.addEventListener("mousedown", (event) => {
+          if (editMode !== "delete" || event.button !== 0) {
+            return;
+          }
+          removeArrowById(arrow.id);
+          event.preventDefault();
+          event.stopPropagation();
+        });
+        arrowHitLayer.appendChild(hitPath);
+      });
+    }
+
+    function drawLineStartMarker() {
+      lineSelectionLayer.replaceChildren();
+      if (editMode === "lines" && lineStartPointIndex !== null) {
+        const anchor = getAnchorForArrow(lineStartPointIndex, false);
+        const marker = document.createElementNS(svgNs, "circle");
+        marker.setAttribute("cx", String(anchor.x));
+        marker.setAttribute("cy", String(anchor.y));
+        marker.setAttribute("r", "9");
+        marker.setAttribute("fill", "rgba(255,255,255,0.85)");
+        marker.setAttribute("stroke", "#506884");
+        marker.setAttribute("stroke-width", "2");
+        lineSelectionLayer.appendChild(marker);
+      }
+    }
+
+    function recordEditAction(action) {
+      editHistory.push(action);
+      redoHistory.length = 0;
+    }
+
+    function queueTowerShiftAnimation(pointIndexLike, fromCount, toCount) {
+      const pointIndex = Number(pointIndexLike);
+      if (!Number.isInteger(pointIndex) || pointIndex < 0 || pointIndex >= pointDefs.length) {
+        return;
+      }
+      if (fromCount === toCount) {
+        return;
+      }
+      pendingTowerShiftAnimations.set(pointIndex, { fromCount, toCount });
+    }
+
+    function isBarPointId(pointId) {
+      return pointId === "bar-top" || pointId === "bar-bottom";
+    }
+
+    function getPointStackById(pointId) {
+      if (isBarPointId(pointId)) {
+        return pointId === "bar-top" ? barStacks.top : barStacks.bottom;
+      }
+      const pointIndex = Number(pointId);
+      if (!Number.isInteger(pointIndex) || pointIndex < 0 || pointIndex >= pointDefs.length) {
+        return null;
+      }
+      return pointStacks[pointIndex];
+    }
+
+    function getTopCheckerColor(pointId) {
+      const stack = getPointStackById(pointId);
+      if (!stack || stack.length === 0) {
+        return null;
+      }
+      return stack[stack.length - 1];
+    }
+
+    function popTopChecker(pointId) {
+      const stack = getPointStackById(pointId);
+      if (!stack || stack.length === 0) {
+        return null;
+      }
+      return stack.pop();
+    }
+
+    function pushChecker(pointId, color) {
+      const stack = getPointStackById(pointId);
+      if (!stack) {
+        return;
+      }
+      stack.push(color);
+    }
+
+    function getCheckerPlacementAnchor(pointId, colorForPlacement = "white") {
+      if (isBarPointId(pointId)) {
+        return {
+          x: barX,
+          y: pointId === "bar-top" ? barTopY : barBottomY
+        };
+      }
+      const pointIndex = Number(pointId);
+      const point = pointDefs[pointIndex];
+      const stack = pointStacks[pointIndex];
+      const nextCount = stack.length + 1;
+      const step = nextCount <= 5 ? defaultStep : Math.min(defaultStep, maxTowerSpan / (nextCount - 1));
+      return {
+        x: point.x,
+        y: point.startY + point.direction * (nextCount - 1) * step,
+        color: colorForPlacement
+      };
+    }
+
+    function animateCheckerMove(color, fromAnchor, toAnchor) {
+      const style = checkerStyleForColor(color);
+      const animatedChecker = document.createElementNS(svgNs, "circle");
+      animatedChecker.setAttribute("r", String(radius));
+      animatedChecker.setAttribute("fill", style.fill);
+      animatedChecker.setAttribute("stroke", style.stroke);
+      animatedChecker.setAttribute("stroke-width", "3");
+      checkersLayer.appendChild(animatedChecker);
+
+      return new Promise((resolve) => {
+        const durationMs = 250;
+        const startTs = performance.now();
+
+        function tick(now) {
+          const t = Math.min(1, (now - startTs) / durationMs);
+          const eased = 1 - Math.pow(1 - t, 3);
+          const x = fromAnchor.x + (toAnchor.x - fromAnchor.x) * eased;
+          const y = fromAnchor.y + (toAnchor.y - fromAnchor.y) * eased;
+          animatedChecker.setAttribute("cx", String(x));
+          animatedChecker.setAttribute("cy", String(y));
+          if (t < 1) {
+            requestAnimationFrame(tick);
+            return;
+          }
+          animatedChecker.remove();
+          resolve();
+        }
+
+        requestAnimationFrame(tick);
+      });
+    }
+
+    function addCheckerToBar(section, color) {
+      if (section !== "top" && section !== "bottom") {
+        return;
+      }
+      if (color !== "white" && color !== "black") {
+        return;
+      }
+      barStacks[section].push(color);
+      recordEditAction({ type: "addBar", section, color });
+      renderBoard();
+    }
+
+    function removeCheckerFromBar(section) {
+      if (section !== "top" && section !== "bottom") {
+        return false;
+      }
+      const stack = barStacks[section];
+      if (stack.length === 0) {
+        return false;
+      }
+      const color = stack.pop();
+      recordEditAction({ type: "deleteBar", section, color });
+      renderBoard();
+      return true;
+    }
+
     function renderBoard() {
       checkersLayer.replaceChildren();
+      countLabelsLayer.replaceChildren();
       extrasLayer.replaceChildren();
 
       pointStacks.forEach((stack, idx) => drawTower(idx, stack));
+      pendingTowerShiftAnimations.clear();
+      drawBarCheckers();
+      drawArrows();
+      drawLineStartMarker();
 
-      if (showDiceInput.checked) {
-        const dieOne = clampInt(dieOneInput.value, 1, 6, 1);
-        const dieTwo = clampInt(dieTwoInput.value, 1, 6, 1);
-        const isLeftSide = diceSideInput.value === "left";
-        dieOneInput.value = String(dieOne);
-        dieTwoInput.value = String(dieTwo);
-        drawDie(isLeftSide ? 348 : 689, 261, dieOne);
-        drawDie(isLeftSide ? 404 : 745, 261, dieTwo);
+      const dieOne = clampInt(dieOneInput.value, 0, 6, 0);
+      const dieTwo = clampInt(dieTwoInput.value, 0, 6, 0);
+      dieOneInput.value = String(dieOne);
+      dieTwoInput.value = String(dieTwo);
+      if (dieOne > 0) {
+        drawDie(689, 261, dieOne);
+      }
+      if (dieTwo > 0) {
+        drawDie(745, 261, dieTwo);
       }
 
-      if (showCubeInput.checked) {
-        const cubeValue = clampInt(cubeValueInput.value, 2, 9999, 2);
-        cubeValueInput.value = String(cubeValue);
+      const cubeValue = clampInt(cubeValueInput.value, 0, 64, 0);
+      cubeValueInput.value = String(cubeValue);
+      if (cubeValue > 0) {
         drawDoublingCube(cubeValue);
       }
     }
@@ -525,39 +1123,332 @@
     function editPoint(pointIndex) {
       const stack = pointStacks[pointIndex];
       if (editMode === "white") {
+        const prevCount = stack.length;
         stack.push("white");
-        editHistory.push({ type: "add", pointIndex, color: "white" });
+        recordEditAction({ type: "add", pointIndex, color: "white" });
+        queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
       } else if (editMode === "black") {
+        const prevCount = stack.length;
         stack.push("black");
-        editHistory.push({ type: "add", pointIndex, color: "black" });
+        recordEditAction({ type: "add", pointIndex, color: "black" });
+        queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
       }
       renderBoard();
     }
 
-    function deleteOneChecker(pointIndex) {
+    function deleteOneChecker(pointIndexLike) {
+      const pointIndex = Number(pointIndexLike);
+      if (!Number.isInteger(pointIndex) || pointIndex < 0 || pointIndex >= pointDefs.length) {
+        return false;
+      }
       const stack = pointStacks[pointIndex];
       if (stack.length === 0) {
+        return false;
+      }
+      const prevCount = stack.length;
+      const deletedColor = stack.pop();
+      recordEditAction({ type: "delete", pointIndex, color: deletedColor });
+      queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
+      renderBoard();
+      return true;
+    }
+
+    function removeArrowById(arrowId) {
+      const idx = arrows.findIndex((arrow) => arrow.id === arrowId);
+      if (idx === -1) {
+        return false;
+      }
+      const [removedArrow] = arrows.splice(idx, 1);
+      recordEditAction({ type: "deleteArrow", arrow: removedArrow });
+      if (lineStartPointIndex !== null && (lineStartPointIndex === removedArrow.from || lineStartPointIndex === removedArrow.to)) {
+        lineStartPointIndex = null;
+      }
+      renderBoard();
+      return true;
+    }
+
+    function removeLastArrowForPoint(pointId) {
+      for (let i = arrows.length - 1; i >= 0; i -= 1) {
+        const arrow = arrows[i];
+        if (arrow.from !== pointId && arrow.to !== pointId) {
+          continue;
+        }
+        return removeArrowById(arrow.id);
+      }
+      return false;
+    }
+
+    function deleteFromPoint(pointId) {
+      if (pointId === "bar-top") {
+        removeCheckerFromBar("top");
         return;
       }
-      const deletedColor = stack.pop();
-      editHistory.push({ type: "delete", pointIndex, color: deletedColor });
+      if (pointId === "bar-bottom") {
+        removeCheckerFromBar("bottom");
+        return;
+      }
+      if (deleteOneChecker(pointId)) {
+        return;
+      }
+      removeLastArrowForPoint(pointId);
+    }
+
+    function handleLinePoint(pointId) {
+      if (lineStartPointIndex === null) {
+        lineStartPointIndex = pointId;
+        renderBoard();
+        return;
+      }
+
+      if (lineStartPointIndex === pointId) {
+        lineStartPointIndex = null;
+        renderBoard();
+        return;
+      }
+
+      const arrow = {
+        id: nextArrowId,
+        from: lineStartPointIndex,
+        to: pointId
+      };
+      nextArrowId += 1;
+      arrows.push(arrow);
+      recordEditAction({ type: "addArrow", arrow });
+      lineStartPointIndex = null;
+      renderBoard();
+    }
+
+    async function handleMovePoint(pointId) {
+      if (isMoveAnimating) {
+        return;
+      }
+
+      if (moveStartPointId === null) {
+        if (!getTopCheckerColor(pointId)) {
+          return;
+        }
+        moveStartPointId = pointId;
+        renderBoard();
+        return;
+      }
+
+      if (moveStartPointId === pointId) {
+        moveStartPointId = null;
+        renderBoard();
+        return;
+      }
+
+      const fromPointId = moveStartPointId;
+      const color = getTopCheckerColor(fromPointId);
+      if (!color) {
+        moveStartPointId = null;
+        renderBoard();
+        return;
+      }
+
+      const fromAnchor = getAnchorForArrow(fromPointId, false);
+      const fromStack = getPointStackById(fromPointId);
+      const toStack = getPointStackById(pointId);
+      const fromPrevCount = fromStack ? fromStack.length : 0;
+      const toPrevCount = toStack ? toStack.length : 0;
+      const movedColor = popTopChecker(fromPointId);
+      const toAnchor = getCheckerPlacementAnchor(pointId, movedColor || color);
+      isMoveAnimating = true;
+      moveStartPointId = null;
+      pushChecker(pointId, movedColor || color);
+      moveInFlight = { toPointId: pointId, color: movedColor || color };
+      queueTowerShiftAnimation(pointId, toPrevCount, toPrevCount + 1);
+      queueTowerShiftAnimation(fromPointId, fromPrevCount, Math.max(0, fromPrevCount - 1));
+      renderBoard();
+      await animateCheckerMove(movedColor || color, fromAnchor, toAnchor);
+      moveInFlight = null;
+      recordEditAction({ type: "moveChecker", from: fromPointId, to: pointId, color: movedColor || color });
+      isMoveAnimating = false;
       renderBoard();
     }
 
     function undoLastEdit() {
+      if (lineStartPointIndex !== null) {
+        redoHistory.push({ type: "lineStartSelection", pointIndex: lineStartPointIndex });
+        lineStartPointIndex = null;
+        renderBoard();
+        return;
+      }
+
       const lastAction = editHistory.pop();
       if (!lastAction) {
         return;
       }
 
-      const stack = pointStacks[lastAction.pointIndex];
-      if (lastAction.type === "add") {
+      if (lastAction.type === "addBar") {
+        const stack = barStacks[lastAction.section];
         if (stack.length > 0) {
           stack.pop();
         }
-      } else if (lastAction.type === "delete") {
-        stack.push(lastAction.color);
+        redoHistory.push(lastAction);
+        renderBoard();
+        return;
       }
+      if (lastAction.type === "deleteBar") {
+        barStacks[lastAction.section].push(lastAction.color);
+        redoHistory.push(lastAction);
+        renderBoard();
+        return;
+      }
+      if (lastAction.type === "moveChecker") {
+        const fromStack = getPointStackById(lastAction.from);
+        const toStack = getPointStackById(lastAction.to);
+        const fromPrevCount = fromStack ? fromStack.length : 0;
+        const toPrevCount = toStack ? toStack.length : 0;
+        const moved = popTopChecker(lastAction.to);
+        if (moved) {
+          pushChecker(lastAction.from, moved);
+        }
+        queueTowerShiftAnimation(lastAction.to, toPrevCount, Math.max(0, toPrevCount - 1));
+        queueTowerShiftAnimation(lastAction.from, fromPrevCount, fromPrevCount + 1);
+        moveStartPointId = null;
+        redoHistory.push(lastAction);
+        renderBoard();
+        return;
+      }
+
+      const stack = pointStacks[lastAction.pointIndex];
+      if (lastAction.type === "add") {
+        const prevCount = stack.length;
+        if (stack.length > 0) {
+          stack.pop();
+        }
+        queueTowerShiftAnimation(lastAction.pointIndex, prevCount, stack.length);
+      } else if (lastAction.type === "delete") {
+        const prevCount = stack.length;
+        stack.push(lastAction.color);
+        queueTowerShiftAnimation(lastAction.pointIndex, prevCount, stack.length);
+      } else if (lastAction.type === "addArrow") {
+        const idx = arrows.findIndex((arrow) => arrow.id === lastAction.arrow.id);
+        if (idx !== -1) {
+          arrows.splice(idx, 1);
+        }
+      } else if (lastAction.type === "deleteArrow") {
+        arrows.push(lastAction.arrow);
+      }
+      redoHistory.push(lastAction);
+      renderBoard();
+    }
+
+    function redoLastEdit() {
+      const redoAction = redoHistory.pop();
+      if (!redoAction) {
+        return;
+      }
+
+      if (redoAction.type === "lineStartSelection") {
+        lineStartPointIndex = redoAction.pointIndex;
+        renderBoard();
+        return;
+      }
+
+      if (redoAction.type === "addBar") {
+        barStacks[redoAction.section].push(redoAction.color);
+        editHistory.push(redoAction);
+        renderBoard();
+        return;
+      }
+      if (redoAction.type === "deleteBar") {
+        const stack = barStacks[redoAction.section];
+        if (stack.length > 0) {
+          stack.pop();
+        }
+        editHistory.push(redoAction);
+        renderBoard();
+        return;
+      }
+      if (redoAction.type === "moveChecker") {
+        const fromStack = getPointStackById(redoAction.from);
+        const toStack = getPointStackById(redoAction.to);
+        const fromPrevCount = fromStack ? fromStack.length : 0;
+        const toPrevCount = toStack ? toStack.length : 0;
+        const moved = popTopChecker(redoAction.from);
+        if (moved) {
+          pushChecker(redoAction.to, moved);
+        }
+        queueTowerShiftAnimation(redoAction.from, fromPrevCount, Math.max(0, fromPrevCount - 1));
+        queueTowerShiftAnimation(redoAction.to, toPrevCount, toPrevCount + 1);
+        moveStartPointId = null;
+        editHistory.push(redoAction);
+        renderBoard();
+        return;
+      }
+
+      const stack = pointStacks[redoAction.pointIndex];
+      if (redoAction.type === "add") {
+        const prevCount = stack.length;
+        stack.push(redoAction.color);
+        queueTowerShiftAnimation(redoAction.pointIndex, prevCount, stack.length);
+      } else if (redoAction.type === "delete") {
+        const prevCount = stack.length;
+        if (stack.length > 0) {
+          stack.pop();
+        }
+        queueTowerShiftAnimation(redoAction.pointIndex, prevCount, stack.length);
+      } else if (redoAction.type === "addArrow") {
+        arrows.push(redoAction.arrow);
+      } else if (redoAction.type === "deleteArrow") {
+        const idx = arrows.findIndex((arrow) => arrow.id === redoAction.arrow.id);
+        if (idx !== -1) {
+          arrows.splice(idx, 1);
+        }
+      }
+      editHistory.push(redoAction);
+      renderBoard();
+    }
+
+    function clearBoardState() {
+      pointStacks.forEach((stack) => {
+        stack.length = 0;
+      });
+      barStacks.top.length = 0;
+      barStacks.bottom.length = 0;
+      arrows.length = 0;
+      lineStartPointIndex = null;
+      moveStartPointId = null;
+      moveInFlight = null;
+      editHistory.length = 0;
+      redoHistory.length = 0;
+      isDeleteDragging = false;
+      stopDeleteHold();
+      renderBoard();
+    }
+
+    function setPointStackByNumber(pointNumber, color, count) {
+      const index = pointNumber - 1;
+      if (index < 0 || index >= pointStacks.length) {
+        return;
+      }
+      const stack = pointStacks[index];
+      stack.length = 0;
+      for (let i = 0; i < count; i += 1) {
+        stack.push(color);
+      }
+    }
+
+    function applyLongNardySetup() {
+      clearBoardState();
+      setPointStackByNumber(1, "white", 15);
+      setPointStackByNumber(13, "black", 15);
+      renderBoard();
+    }
+
+    function applyShortNardySetup() {
+      clearBoardState();
+      setPointStackByNumber(1, "white", 2);
+      setPointStackByNumber(12, "white", 5);
+      setPointStackByNumber(17, "white", 3);
+      setPointStackByNumber(19, "white", 5);
+
+      setPointStackByNumber(24, "black", 2);
+      setPointStackByNumber(13, "black", 5);
+      setPointStackByNumber(8, "black", 3);
+      setPointStackByNumber(6, "black", 5);
       renderBoard();
     }
 
@@ -578,14 +1469,14 @@
         if (!isDeleteDragging || activeDeletePointIndex === null) {
           return;
         }
-        deleteOneChecker(activeDeletePointIndex);
+        deleteFromPoint(activeDeletePointIndex);
       }, 120);
     }
 
     function createHitZones() {
       hitZonesLayer.replaceChildren();
       const rectWidth = 47.167;
-      const rectHeight = radius + defaultStep * 5 + (topStartY - 22);
+      const rectHeight = 513 / 2;
       const zoneLeftOffset = rectWidth / 2;
       const topZoneY = 22;
       const bottomZoneY = 535 - rectHeight;
@@ -597,68 +1488,120 @@
         rect.setAttribute("width", String(rectWidth));
         rect.setAttribute("height", String(rectHeight));
         rect.setAttribute("class", "hover-zone");
-        rect.dataset.pointIndex = String(pointIndex + 1);
+        const pointId = String(pointIndex);
+        rect.dataset.pointIndex = pointId;
         rect.addEventListener("mousedown", (event) => {
           if (editMode !== "delete" || event.button !== 0) {
             return;
           }
-          deleteOneChecker(pointIndex);
+          deleteFromPoint(pointId);
           isDeleteDragging = true;
-          startDeleteHold(pointIndex);
+          startDeleteHold(pointId);
           event.preventDefault();
         });
         rect.addEventListener("mouseenter", (event) => {
           if (editMode !== "delete" || !isDeleteDragging || (event.buttons & 1) !== 1) {
             return;
           }
-          activeDeletePointIndex = pointIndex;
-          deleteOneChecker(pointIndex);
+          activeDeletePointIndex = pointId;
+          deleteFromPoint(pointId);
         });
         rect.addEventListener("mouseleave", () => {
           if (editMode !== "delete") {
             return;
           }
-          if (activeDeletePointIndex === pointIndex) {
+          if (activeDeletePointIndex === pointId) {
             activeDeletePointIndex = null;
           }
         });
         rect.addEventListener("click", () => {
+          if (editMode === "lines") {
+            handleLinePoint(pointId);
+            return;
+          }
+          if (editMode === "move") {
+            void handleMovePoint(pointId);
+            return;
+          }
           if (editMode !== "delete") {
             editPoint(pointIndex);
           }
         });
         hitZonesLayer.appendChild(rect);
       });
+
+      const barTopRect = document.createElementNS(svgNs, "rect");
+      barTopRect.setAttribute("x", String(barX - zoneLeftOffset));
+      barTopRect.setAttribute("y", String(topZoneY));
+      barTopRect.setAttribute("width", String(rectWidth));
+      barTopRect.setAttribute("height", String(rectHeight));
+      barTopRect.setAttribute("class", "hover-zone");
+      barTopRect.dataset.pointIndex = "bar-top";
+      barTopRect.addEventListener("mousedown", (event) => {
+        if (event.button !== 0) {
+          return;
+        }
+        if (editMode === "delete") {
+          removeCheckerFromBar("top");
+          event.preventDefault();
+        }
+      });
+      barTopRect.addEventListener("click", () => {
+        if (editMode === "lines") {
+          handleLinePoint("bar-top");
+        } else if (editMode === "move") {
+          void handleMovePoint("bar-top");
+        } else if (editMode === "white") {
+          addCheckerToBar("top", "white");
+        } else if (editMode === "black") {
+          addCheckerToBar("top", "black");
+        }
+      });
+      hitZonesLayer.appendChild(barTopRect);
+
+      const barBottomRect = document.createElementNS(svgNs, "rect");
+      barBottomRect.setAttribute("x", String(barX - zoneLeftOffset));
+      barBottomRect.setAttribute("y", String(bottomZoneY));
+      barBottomRect.setAttribute("width", String(rectWidth));
+      barBottomRect.setAttribute("height", String(rectHeight));
+      barBottomRect.setAttribute("class", "hover-zone");
+      barBottomRect.dataset.pointIndex = "bar-bottom";
+      barBottomRect.addEventListener("mousedown", (event) => {
+        if (event.button !== 0) {
+          return;
+        }
+        if (editMode === "delete") {
+          removeCheckerFromBar("bottom");
+          event.preventDefault();
+        }
+      });
+      barBottomRect.addEventListener("click", () => {
+        if (editMode === "lines") {
+          handleLinePoint("bar-bottom");
+        } else if (editMode === "move") {
+          void handleMovePoint("bar-bottom");
+        } else if (editMode === "white") {
+          addCheckerToBar("bottom", "white");
+        } else if (editMode === "black") {
+          addCheckerToBar("bottom", "black");
+        }
+      });
+      hitZonesLayer.appendChild(barBottomRect);
     }
 
     function setBoardScale(scaleValue) {
-      const width = (baseBoardWidth * scaleValue) / 100;
+      const safeValue = Math.max(20, Math.min(getMaxScreenScale(), scaleValue));
+      const width = (baseBoardWidth * safeValue) / 100;
       boardSvg.style.width = `${width}px`;
-      currentBoardScale = scaleValue;
+      currentBoardScale = safeValue;
     }
 
-    function applyBoardScale(rawValue, { commitToInput = false } = {}) {
-      const trimmed = String(rawValue).trim();
-      if (trimmed === "") {
-        if (commitToInput) {
-          boardScaleNumber.value = String(currentBoardScale);
-        }
-        return;
-      }
-
-      const parsed = Number.parseInt(trimmed, 10);
-      if (!Number.isFinite(parsed)) {
-        if (commitToInput) {
-          boardScaleNumber.value = String(currentBoardScale);
-        }
-        return;
-      }
-
-      const safeValue = Math.max(20, Math.min(100, parsed));
-      setBoardScale(safeValue);
-      if (commitToInput) {
-        boardScaleNumber.value = String(safeValue);
-      }
+    function getMaxScreenScale() {
+      const bodyHorizontalPadding = 32;
+      const boardWrapHorizontalPadding = 24;
+      const availableWidth = Math.max(240, window.innerWidth - bodyHorizontalPadding - boardWrapHorizontalPadding);
+      const fitScale = Math.floor((availableWidth / baseBoardWidth) * 100);
+      return Math.max(20, fitScale);
     }
 
     function getInitialBoardScale() {
@@ -685,6 +1628,12 @@
       }
 
       pointLabelsLayer.querySelectorAll("text").forEach((textNode) => {
+        applyTextFlipCompensation(textNode);
+      });
+      checkersLayer.querySelectorAll("text").forEach((textNode) => {
+        applyTextFlipCompensation(textNode);
+      });
+      countLabelsLayer.querySelectorAll("text").forEach((textNode) => {
         applyTextFlipCompensation(textNode);
       });
       extrasLayer.querySelectorAll("text").forEach((textNode) => {
@@ -738,11 +1687,30 @@
           await writable.close();
           return;
         }
+
+        // Mobile-friendly path: share image file if supported.
+        if ("canShare" in navigator && "share" in navigator) {
+          const pngFile = new File([pngBlob], "board-position.png", { type: "image/png" });
+          if (navigator.canShare({ files: [pngFile] })) {
+            await navigator.share({
+              title: "Board position",
+              files: [pngFile]
+            });
+            return;
+          }
+        }
+
         const url = URL.createObjectURL(pngBlob);
         const link = document.createElement("a");
         link.href = url;
         link.download = "board-position.png";
         link.click();
+
+        // iOS/Safari can ignore download attribute: open image directly.
+        window.setTimeout(() => {
+          window.open(url, "_blank");
+        }, 50);
+
         URL.revokeObjectURL(url);
       } catch (error) {
         console.error(error);
@@ -750,22 +1718,33 @@
       }
     }
 
-    boardScaleNumber.addEventListener("input", (event) => applyBoardScale(event.target.value));
-    boardScaleNumber.addEventListener("blur", (event) => applyBoardScale(event.target.value, { commitToInput: true }));
-    boardScaleNumber.addEventListener("change", (event) => applyBoardScale(event.target.value, { commitToInput: true }));
-    showPointLabelsInput.addEventListener("change", syncPointLabelsVisibility);
-    showDiceInput.addEventListener("change", renderBoard);
-    diceSideInput.addEventListener("change", renderBoard);
-    dieOneInput.addEventListener("input", renderBoard);
-    dieTwoInput.addEventListener("input", renderBoard);
-    showCubeInput.addEventListener("change", renderBoard);
-    cubeValueInput.addEventListener("input", renderBoard);
+    zoomOutBtn.addEventListener("click", () => {
+      setBoardScale(currentBoardScale - 10);
+    });
+    zoomInBtn.addEventListener("click", () => {
+      setBoardScale(currentBoardScale + 10);
+    });
+    togglePointLabelsBtn.addEventListener("click", () => {
+      arePointLabelsVisible = !arePointLabelsVisible;
+      syncPointLabelsVisibility();
+    });
+    dieOneInput.addEventListener("change", renderBoard);
+    dieTwoInput.addEventListener("change", renderBoard);
+    rollDiceBtn.addEventListener("click", () => {
+      dieOneInput.value = String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1));
+      dieTwoInput.value = String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1));
+      renderBoard();
+    });
+    cubeValueInput.addEventListener("change", renderBoard);
     exportPngBtn.addEventListener("click", savePng);
     flipBoardBtn.addEventListener("click", () => {
       isBoardFlipped = !isBoardFlipped;
       applyBoardFlip();
     });
     backBtn.addEventListener("click", undoLastEdit);
+    clearBtn.addEventListener("click", clearBoardState);
+    setupLongBtn.addEventListener("click", applyLongNardySetup);
+    setupShortBtn.addEventListener("click", applyShortNardySetup);
 
     Object.entries(modeButtons).forEach(([mode, btn]) => {
       btn.addEventListener("click", () => {
@@ -780,11 +1759,53 @@
       isDeleteDragging = false;
       stopDeleteHold();
     });
+    window.addEventListener("resize", () => {
+      setBoardScale(currentBoardScale);
+    });
+    window.addEventListener("mousedown", (event) => {
+      const target = event.target;
+      const clickedOnHitRect = target instanceof Element && target.closest(".hover-zone");
+      if (clickedOnHitRect) {
+        return;
+      }
+      if (lineStartPointIndex === null && moveStartPointId === null) {
+        return;
+      }
+      lineStartPointIndex = null;
+      moveStartPointId = null;
+      renderBoard();
+    });
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      const isUndoKey = (event.ctrlKey || event.metaKey) && !event.shiftKey && (key === "z" || key === "я");
+      const isRedoKey = (event.ctrlKey || event.metaKey) && event.shiftKey && (key === "z" || key === "я");
+      if (!isUndoKey && !isRedoKey) {
+        return;
+      }
+
+      const target = event.target;
+      const isTypingTarget = target instanceof HTMLElement && (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      );
+      if (isTypingTarget) {
+        return;
+      }
+
+      event.preventDefault();
+      if (isRedoKey) {
+        redoLastEdit();
+        return;
+      }
+      undoLastEdit();
+    });
 
     createPointLabels();
     createHitZones();
     syncPointLabelsVisibility();
-    applyBoardScale(getInitialBoardScale(), { commitToInput: true });
+    setBoardScale(getInitialBoardScale());
     applyMode("white");
     applyBoardFlip();
     renderBoard();
