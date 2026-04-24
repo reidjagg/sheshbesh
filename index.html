@@ -302,7 +302,6 @@
     <div class="actions actions--top">
       <button id="setupLongBtn" type="button">Длинные ⚡</button>
       <button id="setupShortBtn" type="button">Короткие ⚡</button>
-      <button id="backBtn" type="button">Back ↩️</button>
       <button id="clearBtn" type="button">Clear ❌</button>
     </div>
 
@@ -372,6 +371,7 @@
         <button id="modeWhiteBtn" class="mode-btn active" type="button" data-mode="white">+ Add <span class="checker-icon checker-icon--white"></span></button>
         <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">+ Add <span class="checker-icon checker-icon--black"></span></button>
         <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Delete 🗑️</button>
+        <button id="backBtn" class="mode-btn" type="button">Back ↩️</button>
       </div>
     </div>
 
@@ -571,7 +571,24 @@
       textNode.removeAttribute("transform");
     }
 
-    function addCountLabel(x, y, count, textColor) {
+    function getCheckerAnimatedDeltaY(point, stackLength, i, animation) {
+      if (!animation) {
+        return 0;
+      }
+      const step = getTowerStep(stackLength);
+      const oldStep = getTowerStep(animation.fromCount);
+      const cy = point.startY + point.direction * i * step;
+      let fromCy = cy;
+      if (i < animation.fromCount) {
+        fromCy = point.startY + point.direction * i * oldStep;
+      } else {
+        const prevTopIndex = Math.max(0, animation.fromCount - 1);
+        fromCy = point.startY + point.direction * prevTopIndex * oldStep;
+      }
+      return fromCy - cy;
+    }
+
+    function addCountLabel(x, y, count, textColor, startOffsetY) {
       const text = document.createElementNS(svgNs, "text");
       text.setAttribute("x", String(x));
       text.setAttribute("y", String(y));
@@ -583,6 +600,20 @@
       text.setAttribute("font-weight", "bold");
       text.textContent = String(count);
       applyTextFlipCompensation(text);
+
+      const doOffset = Number.isFinite(startOffsetY) && Math.abs(startOffsetY) > 0.01;
+      if (doOffset) {
+        const g = document.createElementNS(svgNs, "g");
+        g.appendChild(text);
+        g.style.transition = "none";
+        g.style.transform = `translateY(${startOffsetY}px)`;
+        requestAnimationFrame(() => {
+          g.style.transition = "transform 500ms cubic-bezier(0.22, 1, 0.36, 1)";
+          g.style.transform = "translateY(0px)";
+        });
+        countLabelsLayer.appendChild(g);
+        return;
+      }
       countLabelsLayer.appendChild(text);
     }
 
@@ -666,7 +697,13 @@
 
       if (stack.length > 5) {
         const fixedLabelY = point.startY + point.direction * maxTowerSpan;
-        addCountLabel(topX, fixedLabelY, stack.length, style.textColor);
+        const shrinkAnim =
+          animation && animation.fromCount > stack.length ? animation : null;
+        const topIdx = stack.length - 1;
+        const labelStartOffsetY = shrinkAnim
+          ? getCheckerAnimatedDeltaY(point, stack.length, topIdx, shrinkAnim)
+          : 0;
+        addCountLabel(topX, fixedLabelY, stack.length, style.textColor, labelStartOffsetY);
       }
     }
 
