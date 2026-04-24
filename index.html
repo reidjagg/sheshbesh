@@ -51,10 +51,39 @@
     @media (max-width: 768px) {
       body {
         align-items: stretch;
+        padding: 0;
+      }
+
+      .actions,
+      .controls,
+      .dice-panel {
+        width: 100%;
+        max-width: 100%;
+        border: none;
+        border-radius: 0;
+        box-sizing: border-box;
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .actions--bottom {
+        margin-top: 0;
+      }
+
+      .actions--top {
+        margin-top: 8px;
+        margin-bottom: 8px;
+      }
+
+      .controls,
+      .dice-panel {
+        margin-top: 8px;
       }
 
       #boardSvg {
-        align-self: center;
+        align-self: stretch;
+        margin: 0;
+        max-width: none;
       }
     }
 
@@ -307,8 +336,8 @@
       <button id="exportPngBtn" type="button">PNG💾</button>
       <button id="flipBoardBtn" type="button">Поворот🔄</button>
       <button id="togglePointLabelsBtn" type="button">Поля🔢</button>
-      <button id="zoomOutBtn" type="button">–🔍</button>
-      <button id="zoomInBtn" type="button">+🔎</button>
+      <button id="zoomOutBtn" type="button">🔍</button>
+      <button id="zoomInBtn" type="button">🔎</button>
     </div>
 
     <div class="actions actions--top">
@@ -1714,6 +1743,10 @@
     }
 
     function getAvailableBoardWidth() {
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+      if (isMobile) {
+        return Math.max(1, window.innerWidth);
+      }
       const bodyHorizontalPadding = 32;
       return Math.max(1, window.innerWidth - bodyHorizontalPadding);
     }
