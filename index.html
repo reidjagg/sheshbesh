@@ -5,12 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Шешбеш редактор</title>
   <style>
+    html {
+      touch-action: manipulation;
+      background: var(--bg);
+      color-scheme: dark;
+    }
+
     :root {
-      --bg: #f5f1ea;
-      --panel: #ffffff;
-      --text: #1f1f1f;
-      --border: #d8d2c8;
-      --accent: #356d39;
+      /* Lichess-like page shell (SVG board markup unchanged) */
+      --bg: #262421;
+      --panel: #302e2b;
+      --text: #ececea;
+      --border: #3d3a36;
+      --accent: #629924;
+      --ui-surface: #3c3a37;
+      --ui-surface-2: #454240;
+      --ui-border: #5c5a57;
+      --ui-text: #ececea;
+      --ui-btn: #4a4845;
+      --ui-btn-border: #6d6a67;
+      --ui-btn-hover: #52504c;
+      --ui-input-bg: #2f2d2b;
+      --ui-input-border: #5a5653;
+      --ui-chip-inner: #343230;
+      --ui-active: #2a3228;
+      --ui-active-border: #629924;
       --panel-font: Arial, Helvetica, sans-serif;
       --panel-font-size: 14px;
       --panel-line-height: 1.35;
@@ -24,6 +43,7 @@
       color: var(--text);
       user-select: none;
       -webkit-user-select: none;
+      touch-action: manipulation;
     }
 
     .board-wrap {
@@ -36,6 +56,7 @@
       padding: 12px;
       overflow: auto;
       box-sizing: border-box;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
     }
 
     @media (max-width: 768px) {
@@ -70,9 +91,10 @@
       gap: 8px;
       user-select: none;
       padding: 10px;
-      border: 1px solid #ece7de;
+      border: 1px solid var(--ui-border);
       border-radius: 8px;
-      background: #fcfbf8;
+      background: var(--ui-surface);
+      color: var(--ui-text);
       font-family: var(--panel-font);
       font-size: var(--panel-font-size);
       line-height: var(--panel-line-height);
@@ -88,15 +110,22 @@
 
     .actions button {
       padding: 8px 12px;
-      border: 1px solid #b8b0a2;
+      border: 1px solid var(--ui-btn-border);
       border-radius: 6px;
-      background: #f7f3ea;
+      background: var(--ui-btn);
+      color: var(--ui-text);
       cursor: pointer;
       font: inherit;
     }
 
     .actions button:hover {
-      background: #eee7d8;
+      background: var(--ui-btn-hover);
+    }
+
+    .actions button.active {
+      border-color: var(--ui-active-border);
+      box-shadow: inset 0 0 0 1px var(--ui-active-border);
+      background: var(--ui-active);
     }
 
     .controls {
@@ -104,9 +133,10 @@
       display: grid;
       gap: 10px;
       padding: 10px;
-      border: 1px solid #ece7de;
+      border: 1px solid var(--ui-border);
       border-radius: 8px;
-      background: #fcfbf8;
+      background: var(--ui-surface);
+      color: var(--ui-text);
       user-select: none;
       font-family: var(--panel-font);
       font-size: var(--panel-font-size);
@@ -118,9 +148,10 @@
       display: grid;
       gap: 10px;
       padding: 10px;
-      border: 1px solid #ece7de;
+      border: 1px solid var(--ui-border);
       border-radius: 8px;
-      background: #fcfbf8;
+      background: var(--ui-surface);
+      color: var(--ui-text);
       user-select: none;
       font-family: var(--panel-font);
       font-size: var(--panel-font-size);
@@ -139,18 +170,24 @@
       align-items: center;
       gap: 6px;
       padding: 8px 10px;
-      border: 1px solid #b8b0a2;
+      border: 1px solid var(--ui-btn-border);
       border-radius: 6px;
-      background: #f7f3ea;
+      background: var(--ui-btn);
+      color: var(--ui-text);
       cursor: pointer;
       user-select: none;
       font: inherit;
     }
 
+    .mode-btn:hover {
+      background: var(--ui-btn-hover);
+    }
+
     .mode-btn.active {
-      border-color: var(--accent);
-      box-shadow: inset 0 0 0 1px var(--accent);
-      background: #e9f4ea;
+      border-color: var(--ui-active-border);
+      box-shadow: inset 0 0 0 1px var(--ui-active-border);
+      background: var(--ui-active);
+      color: var(--ui-text);
     }
 
     .checker-icon {
@@ -192,26 +229,28 @@
     .scale-input {
       width: 70px;
       padding: 5px 6px;
-      border: 1px solid #d5d0c7;
+      border: 1px solid var(--ui-input-border);
       border-radius: 4px;
+      background: var(--ui-input-bg);
+      color: var(--ui-text);
     }
-
 
     input[type="number"],
     select {
       padding: 4px 6px;
-      border: 1px solid #d5d0c7;
+      border: 1px solid var(--ui-input-border);
       border-radius: 4px;
-      background: #fff;
+      background: var(--ui-input-bg);
+      color: var(--ui-text);
     }
 
     .control-like {
       height: 34px;
       padding: 6px 10px;
-      border: 1px solid #b8b0a2;
+      border: 1px solid var(--ui-input-border);
       border-radius: 6px;
-      background: #f7f3ea;
-      color: #1f1f1f;
+      background: var(--ui-input-bg);
+      color: var(--ui-text);
       box-sizing: border-box;
       font: inherit;
     }
@@ -230,10 +269,10 @@
       align-items: center;
       gap: 8px;
       padding: 8px 10px;
-      border: 1px solid #b8b0a2;
+      border: 1px solid var(--ui-border);
       border-radius: 6px;
-      background: #f7f3ea;
-      color: #1f1f1f;
+      background: var(--ui-surface-2);
+      color: var(--ui-text);
       box-sizing: border-box;
       font: inherit;
       line-height: var(--panel-line-height);
@@ -243,9 +282,10 @@
       height: 24px;
       min-width: 58px;
       padding: 2px 6px;
-      border: 1px solid #c8c1b4;
+      border: 1px solid var(--ui-input-border);
       border-radius: 4px;
-      background: #fff;
+      background: var(--ui-chip-inner);
+      color: var(--ui-text);
     }
   </style>
 </head>
@@ -260,8 +300,8 @@
     </div>
 
     <div class="actions actions--top">
-      <button id="setupLongBtn" type="button">Длинные нарды</button>
-      <button id="setupShortBtn" type="button">Короткие нарды</button>
+      <button id="setupLongBtn" type="button">Длинные ⚡</button>
+      <button id="setupShortBtn" type="button">Короткие ⚡</button>
       <button id="backBtn" type="button">Back ↩️</button>
       <button id="clearBtn" type="button">Clear ❌</button>
     </div>
