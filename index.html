@@ -55,8 +55,8 @@
       }
 
       .actions,
-      .controls,
-      .dice-panel {
+      .panel-modes,
+      .panel-dice {
         width: 100%;
         max-width: 100%;
         border: none;
@@ -66,17 +66,17 @@
         padding-right: 0;
       }
 
-      .actions--bottom {
+      .actions--toolbar {
         margin-top: 0;
       }
 
-      .actions--top {
+      .actions--setup {
         margin-top: 4px;
         margin-bottom: 4px;
       }
 
-      .controls,
-      .dice-panel {
+      .panel-modes,
+      .panel-dice {
         margin-top: 4px;
       }
 
@@ -125,12 +125,12 @@
       line-height: var(--panel-line-height);
     }
 
-    .actions--top {
+    .actions--setup {
       margin-top: 6px;
       margin-bottom: 6px;
     }
 
-    .actions--bottom {
+    .actions--toolbar {
       margin-top: 6px;
       align-self: center;
     }
@@ -170,7 +170,7 @@
       outline-offset: 2px;
     }
 
-    .controls {
+    .panel-modes {
       margin-top: 6px;
       display: grid;
       gap: 4px;
@@ -185,7 +185,7 @@
       line-height: var(--panel-line-height);
     }
 
-    .dice-panel {
+    .panel-dice {
       margin-top: 6px;
       display: grid;
       gap: 4px;
@@ -332,7 +332,7 @@
       line-height: var(--panel-line-height);
     }
 
-    .palette-select-wrap {
+    .board-palette-wrap {
       position: relative;
       display: inline-block;
       width: 52px;
@@ -341,7 +341,7 @@
       flex-shrink: 0;
     }
 
-    .palette-menu-trigger {
+    .board-palette-trigger {
       display: block;
       width: 100%;
       height: 100%;
@@ -355,12 +355,12 @@
       box-sizing: border-box;
     }
 
-    .palette-menu-trigger:focus-visible {
+    .board-palette-trigger:focus-visible {
       outline: 2px solid var(--ui-text);
       outline-offset: 2px;
     }
 
-    .palette-swatch-preview {
+    .board-palette-swatch {
       position: absolute;
       inset: 1px;
       border-radius: 3px;
@@ -369,7 +369,7 @@
       background: linear-gradient(to right, #c9b797 50%, #ff4422 50%);
     }
 
-    .palette-menu-dropdown {
+    .board-palette-dropdown {
       position: absolute;
       top: calc(100% + 4px);
       right: 0;
@@ -388,11 +388,11 @@
       box-sizing: border-box;
     }
 
-    .palette-menu-dropdown[hidden] {
+    .board-palette-dropdown[hidden] {
       display: none !important;
     }
 
-    .palette-menu-option {
+    .board-palette-option {
       display: block;
       width: 52px;
       height: 22px;
@@ -405,55 +405,55 @@
       background-clip: padding-box;
     }
 
-    .palette-menu-option:hover {
+    .board-palette-option:hover {
       filter: brightness(1.06);
     }
 
-    .palette-menu-option[aria-selected="true"] {
+    .board-palette-option[aria-selected="true"] {
       border-color: var(--ui-text);
     }
 
-    .palette-menu-option:focus-visible {
+    .board-palette-option:focus-visible {
       outline: 2px solid var(--ui-text);
       outline-offset: 1px;
     }
   </style>
 </head>
 <body>
-  <div class="actions actions--bottom">
+  <div class="actions actions--toolbar" aria-label="Экспорт и вид доски">
       <button id="exportPngBtn" type="button">💾</button>
       <button id="flipBoardBtn" type="button">🔄</button>
       <button id="togglePointLabelsBtn" type="button">🔢</button>
       <button id="zoomOutBtn" type="button">🔍</button>
       <button id="zoomInBtn" type="button">🔎</button>
-      <div class="value-chip palette-select-label">
-        <div class="palette-select-wrap">
-          <input type="hidden" id="trianglePaletteInput" value="classic" />
+      <div class="value-chip board-palette-chip">
+        <div class="board-palette-wrap">
+          <input type="hidden" id="boardPaletteKeyInput" value="classic" />
           <button
             type="button"
             id="paletteMenuBtn"
-            class="palette-menu-trigger"
+            class="board-palette-trigger"
             aria-haspopup="listbox"
             aria-expanded="false"
             aria-controls="paletteMenuDropdown"
             title="Цветовая тема доски и шашек"
             aria-label="Выбор палитры доски"
           >
-            <span id="paletteSwatchPreview" class="palette-swatch-preview" aria-hidden="true"></span>
+            <span id="paletteSwatchPreview" class="board-palette-swatch" aria-hidden="true"></span>
           </button>
-          <div id="paletteMenuDropdown" class="palette-menu-dropdown" role="listbox" hidden aria-label="Палитры"></div>
+          <div id="paletteMenuDropdown" class="board-palette-dropdown" role="listbox" hidden aria-label="Палитры"></div>
         </div>
       </div>
     </div>
 
-    <div class="actions actions--top">
+    <div class="actions actions--setup" aria-label="Расстановка и отмена">
       <button id="clearBtn" type="button">❌</button>
       <button id="setupLongBtn" type="button">Длинные⚡</button>
       <button id="setupShortBtn" type="button">Короткие⚡</button>
       <button id="backBtn" class="mode-btn" type="button">Вернуть↩️</button>
     </div>
 
-    <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="159 0 808 558" width="808" height="558">
+    <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="159 0 808 558" width="808" height="558" role="img" aria-label="Игровая доска">
       <g id="boardContent">
         <defs id="arrowDefs"></defs>
         <rect x="159" y="0" width="806" height="558" rx="20" ry="20" data-board="frame" fill="#423122" stroke="#000" stroke-width="1"/>
@@ -514,17 +514,17 @@
       </g>
     </svg>
 
-    <div class="controls">
+    <div class="panel-modes" aria-label="Режимы редактирования">
       <div class="row">
-        <button id="modeMoveBtn" class="mode-btn" type="button" data-mode="move">Ход 👆🏻</button>
+        <button id="modeMoveBtn" class="mode-btn active" type="button" data-mode="move">Ход 👣</button>
         <button id="modeLinesBtn" class="mode-btn" type="button" data-mode="lines">◀︎━▶︎</button>
-        <button id="modeWhiteBtn" class="mode-btn active" type="button" data-mode="white">++ <span class="checker-icon checker-icon--white"></span></button>
+        <button id="modeWhiteBtn" class="mode-btn" type="button" data-mode="white">++ <span class="checker-icon checker-icon--white"></span></button>
         <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">++ <span class="checker-icon checker-icon--black"></span></button>
-        <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Стереть🗑️</button>
+        <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Стереть🧹</button>
       </div>
     </div>
 
-    <div class="dice-panel">
+    <div class="panel-dice" aria-label="Куб удвоения и кости">
       <div class="row">
         <label class="value-chip">Куб
           <select id="cubeValueInput" class="control-like">
@@ -579,7 +579,7 @@
     const hitZonesLayer = document.getElementById("hitZonesLayer");
     const arrowHitLayer = document.getElementById("arrowHitLayer");
     const boardTriangleFields = document.getElementById("boardTriangleFields");
-    const trianglePaletteInput = document.getElementById("trianglePaletteInput");
+    const boardPaletteKeyInput = document.getElementById("boardPaletteKeyInput");
     const paletteSwatchPreview = document.getElementById("paletteSwatchPreview");
     const paletteMenuBtn = document.getElementById("paletteMenuBtn");
     const paletteMenuDropdown = document.getElementById("paletteMenuDropdown");
@@ -690,7 +690,7 @@
     };
 
     function getActivePalette() {
-      const v = trianglePaletteInput && trianglePaletteInput.value;
+      const v = boardPaletteKeyInput && boardPaletteKeyInput.value;
       const key = v && v in boardPalettes ? v : "classic";
       return boardPalettes[key];
     }
@@ -705,8 +705,8 @@
 
     function applyBoardPalette(paletteKey) {
       const key = paletteKey in boardPalettes ? paletteKey : "classic";
-      if (trianglePaletteInput) {
-        trianglePaletteInput.value = key;
+      if (boardPaletteKeyInput) {
+        boardPaletteKeyInput.value = key;
       }
       const p = boardPalettes[key];
       applyCheckerThemeCss(p);
@@ -739,11 +739,11 @@
     }
 
     function syncPaletteMenuOptions() {
-      if (!paletteMenuDropdown || !trianglePaletteInput) {
+      if (!paletteMenuDropdown || !boardPaletteKeyInput) {
         return;
       }
-      const current = trianglePaletteInput.value;
-      paletteMenuDropdown.querySelectorAll(".palette-menu-option").forEach((opt) => {
+      const current = boardPaletteKeyInput.value;
+      paletteMenuDropdown.querySelectorAll(".board-palette-option").forEach((opt) => {
         opt.setAttribute("aria-selected", opt.dataset.paletteKey === current ? "true" : "false");
       });
     }
@@ -782,7 +782,7 @@
         const opt = document.createElement("button");
         opt.type = "button";
         opt.setAttribute("role", "option");
-        opt.className = "palette-menu-option";
+        opt.className = "board-palette-option";
         opt.dataset.paletteKey = paletteKey;
         opt.setAttribute("aria-selected", "false");
         opt.style.background = `linear-gradient(to right, ${p.triA} 50%, ${p.triB} 50%)`;
@@ -847,7 +847,7 @@
     const arrowEndWidth = cellWidth * 0.1;
     let isBoardFlipped = false;
     let arePointLabelsVisible = true;
-    let editMode = "white";
+    let editMode = "move";
     let isDeleteDragging = false;
     let activeDeletePointIndex = null;
     let deleteHoldTimer = null;
@@ -2458,7 +2458,7 @@
     createHitZones();
     syncPointLabelsVisibility();
     setBoardScale(getInitialBoardScale());
-    applyMode("white");
+    applyMode("move");
     applyBoardFlip();
     renderBoard();
     syncDiceSnapshotFromInputs();
