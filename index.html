@@ -14,9 +14,7 @@
     :root {
       /* Lichess-like page shell (SVG board markup unchanged) */
       --bg: #262421;
-      --panel: #302e2b;
       --text: #ececea;
-      --border: #3d3a36;
       --accent: #629924;
       --ui-surface: #3c3a37;
       --ui-surface-2: #454240;
@@ -44,29 +42,19 @@
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
-    }
-
-    .board-wrap {
-      width: fit-content;
-      max-width: 100%;
-      margin: 0 auto;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       box-sizing: border-box;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
     }
 
     @media (max-width: 768px) {
-      .board-wrap {
-        width: 100%;
-        max-width: 100%;
+      body {
+        align-items: stretch;
       }
     }
 
-    .board-wrap svg {
+    #boardSvg {
       width: 808px;
       height: auto;
       display: block;
@@ -88,9 +76,9 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       user-select: none;
-      padding: 10px;
+      padding: 6px 8px;
       border: 1px solid var(--ui-border);
       border-radius: 8px;
       background: var(--ui-surface);
@@ -101,6 +89,7 @@
     }
 
     .actions--top {
+      margin-top: 12px;
       margin-bottom: 12px;
     }
 
@@ -131,8 +120,8 @@
     .controls {
       margin-top: 12px;
       display: grid;
-      gap: 10px;
-      padding: 10px;
+      gap: 8px;
+      padding: 6px 8px;
       border: 1px solid var(--ui-border);
       border-radius: 8px;
       background: var(--ui-surface);
@@ -146,8 +135,8 @@
     .dice-panel {
       margin-top: 12px;
       display: grid;
-      gap: 10px;
-      padding: 10px;
+      gap: 8px;
+      padding: 6px 8px;
       border: 1px solid var(--ui-border);
       border-radius: 8px;
       background: var(--ui-surface);
@@ -162,7 +151,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .mode-btn {
@@ -267,8 +256,8 @@
     .value-chip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
+      gap: 6px;
+      padding: 4px 8px;
       border: 1px solid var(--ui-border);
       border-radius: 6px;
       background: var(--ui-surface-2);
@@ -290,8 +279,7 @@
   </style>
 </head>
 <body>
-  <div class="board-wrap" id="boardWrap">
-    <div class="actions actions--bottom">
+  <div class="actions actions--bottom">
       <button id="exportPngBtn" type="button">PNG 💾</button>
       <button id="flipBoardBtn" type="button">Разворот 🔄</button>
       <button id="togglePointLabelsBtn" type="button">Поля 🔢</button>
@@ -415,11 +403,8 @@
       </div>
     </div>
 
-  </div>
-
   <script>
     const svgNs = "http://www.w3.org/2000/svg";
-    const boardWrap = document.getElementById("boardWrap");
     const boardSvg = document.getElementById("boardSvg");
     const boardContent = document.getElementById("boardContent");
     const arrowDefs = document.getElementById("arrowDefs");
@@ -533,7 +518,7 @@
       Object.entries(modeButtons).forEach(([name, btn]) => {
         btn.classList.toggle("active", name === mode);
       });
-      boardWrap.style.cursor = modeCursor[mode];
+      document.body.style.cursor = modeCursor[mode];
       arrowHitLayer.setAttribute("pointer-events", mode === "delete" ? "auto" : "none");
       if (mode !== "lines") {
         lineStartPointIndex = null;
@@ -1700,9 +1685,7 @@
 
     function getAvailableBoardWidth() {
       const bodyHorizontalPadding = 32;
-      const boardWrapHorizontalPadding = 24;
-      const boardWrapBorder = 2;
-      return Math.max(1, window.innerWidth - bodyHorizontalPadding - boardWrapHorizontalPadding - boardWrapBorder);
+      return Math.max(1, window.innerWidth - bodyHorizontalPadding);
     }
 
     function getMaxScreenScale() {
