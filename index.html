@@ -837,13 +837,13 @@
       const preferred = isAppleMobile
         ? [
           { ext: "m4a", mime: "audio/mp4; codecs=\"mp4a.40.2\"" },
-          { ext: "ogg", mime: "audio/ogg; codecs=\"vorbis\"" },
-          { ext: "mp3", mime: "audio/mpeg" }
+          { ext: "mp3", mime: "audio/mpeg" },
+          { ext: "ogg", mime: "audio/ogg; codecs=\"vorbis\"" }
         ]
         : [
+          { ext: "mp3", mime: "audio/mpeg" },
           { ext: "ogg", mime: "audio/ogg; codecs=\"vorbis\"" },
-          { ext: "m4a", mime: "audio/mp4; codecs=\"mp4a.40.2\"" },
-          { ext: "mp3", mime: "audio/mpeg" }
+          { ext: "m4a", mime: "audio/mp4; codecs=\"mp4a.40.2\"" }
         ];
 
       const picked = preferred.find((f) => supports(f.mime));
@@ -871,6 +871,7 @@
     const soundRoll = createSoundPool(resolveBestSoundSrc("roll"), 3);
     const soundCheck = createSoundPool(resolveBestSoundSrc("capture"), 4);
     const soundMove = createSoundPool(resolveBestSoundSrc("move"), 4);
+    const soundBtn = createSoundPool(resolveBestSoundSrc("btn"), 3);
 
     const modeButtons = {
       white: document.getElementById("modeWhiteBtn"),
@@ -2598,6 +2599,7 @@
       void loadSoundBuffer(soundRoll);
       void loadSoundBuffer(soundCheck);
       void loadSoundBuffer(soundMove);
+      void loadSoundBuffer(soundBtn);
     }
 
     function playSoundViaHtmlAudio(sound) {
@@ -2850,9 +2852,11 @@
       setBoardScale(currentBoardScale + 10);
     });
     dieOneInput.addEventListener("change", () => {
+      playSound(soundRoll);
       recordDiceChangeIfNeeded();
     });
     dieTwoInput.addEventListener("change", () => {
+      playSound(soundRoll);
       recordDiceChangeIfNeeded();
     });
     rollDiceBtn.addEventListener("click", () => {
@@ -2866,6 +2870,7 @@
       await requestShakePermissionAndEnable();
     });
     cubeValueInput.addEventListener("change", () => {
+      playSound(soundRoll);
       recordDoublingCubeChangeIfNeeded();
     });
     exportPngBtn.addEventListener("click", savePng);
@@ -2882,6 +2887,25 @@
       } catch (_) {
         /* ignore */
       }
+    });
+    document.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("pointerdown", (event) => {
+        if (event.button !== -1 && event.button !== 0) {
+          return;
+        }
+        if (btn === rollDiceBtn) {
+          return;
+        }
+        playSound(soundBtn);
+      }, { passive: true });
+    });
+    document.querySelectorAll("select").forEach((select) => {
+      select.addEventListener("pointerdown", (event) => {
+        if (event.button !== -1 && event.button !== 0) {
+          return;
+        }
+        playSound(soundBtn);
+      }, { passive: true });
     });
     document.addEventListener("mousedown", (event) => {
       if (!paletteMenuDropdown || paletteMenuDropdown.hidden) {
