@@ -1233,8 +1233,8 @@
     }
 
     function drawDie(x, y, value, animateSpin = false, animationDelayMs = 0) {
-      const dieSize = 48;
-      const cornerRadius = dieSize * 0.1;
+      const dieSize = 45;
+      const cornerRadius = 4;
       const pipRadius = dieSize * 0.1;
       const offsetSmall = dieSize * (7.6 / 35);
       const offsetMid = dieSize * 0.5;
@@ -1251,7 +1251,7 @@
       die.setAttribute("ry", String(cornerRadius));
       die.setAttribute("fill", "#fff");
       die.setAttribute("stroke", "#ccc");
-      die.setAttribute("stroke-width", "1");
+      die.setAttribute("stroke-width", "2");
       dieGroup.appendChild(die);
 
       const positions = {
@@ -1788,10 +1788,10 @@
       dieOneInput.value = String(dieOne);
       dieTwoInput.value = String(dieTwo);
       if (!isDiceRollTransition && dieOne > 0) {
-        drawDie(672.5, 310, dieOne, shouldAnimateDice, 0);
+        drawDie(676.25, 311.5, dieOne, shouldAnimateDice, 0);
       }
       if (!isDiceRollTransition && dieTwo > 0) {
-        drawDie(744.5, 310, dieTwo, shouldAnimateDice, 70);
+        drawDie(743.75, 311.5, dieTwo, shouldAnimateDice, 70);
       }
 
       const cubeValue = clampInt(cubeValueInput.value, 0, 64, 0);
