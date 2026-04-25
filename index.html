@@ -559,6 +559,7 @@
           </select>
         </label>
         <button id="rollDiceBtn" class="mode-btn" type="button">🎲👋</button>
+        <button id="enableShakeBtn" class="mode-btn" type="button">📳👋</button>
       </div>
     </div>
 
@@ -826,6 +827,7 @@
     const dieOneInput = document.getElementById("dieOneInput");
     const dieTwoInput = document.getElementById("dieTwoInput");
     const rollDiceBtn = document.getElementById("rollDiceBtn");
+    const enableShakeBtn = document.getElementById("enableShakeBtn");
     const cubeValueInput = document.getElementById("cubeValueInput");
 
     const modeButtons = {
@@ -2421,7 +2423,7 @@
       lastShakeMagnitude = magnitude;
 
       // Max sensitivity: trigger even on light hand movement.
-      const shakeThreshold = 1.2;
+      const shakeThreshold = 5;
       const shakeCooldownMs = 700;
       const now = Date.now();
       if (delta < shakeThreshold || (now - lastShakeRollAt) < shakeCooldownMs) {
@@ -2437,6 +2439,9 @@
       }
       window.addEventListener("devicemotion", handleDeviceMotionForDiceRoll, { passive: true });
       isShakeMotionListening = true;
+      if (enableShakeBtn) {
+        enableShakeBtn.classList.add("active");
+      }
     }
 
     function tryEnableShakeDiceRoll() {
@@ -2477,6 +2482,36 @@
       }
     }
 
+    async function requestShakePermissionAndEnable() {
+      if (typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
+        motionPermissionState = "denied";
+        if (enableShakeBtn) {
+          enableShakeBtn.classList.remove("active");
+        }
+        return;
+      }
+      if (typeof DeviceMotionEvent.requestPermission === "function") {
+        try {
+          const state = await DeviceMotionEvent.requestPermission();
+          if (state === "granted") {
+            motionPermissionState = "granted";
+            startShakeDiceRollListening();
+            return;
+          }
+          motionPermissionState = "denied";
+        } catch (error) {
+          motionPermissionState = "unknown";
+        }
+      } else {
+        motionPermissionState = "granted";
+        startShakeDiceRollListening();
+        return;
+      }
+      if (enableShakeBtn) {
+        enableShakeBtn.classList.remove("active");
+      }
+    }
+
     zoomOutBtn.addEventListener("click", () => {
       setBoardScale(currentBoardScale - 10);
     });
@@ -2495,6 +2530,9 @@
     });
     rollDiceBtn.addEventListener("click", () => {
       rollDiceRandomly();
+    });
+    enableShakeBtn.addEventListener("click", () => {
+      requestShakePermissionAndEnable();
     });
     cubeValueInput.addEventListener("change", () => {
       recordDoublingCubeChangeIfNeeded();
