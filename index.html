@@ -836,7 +836,9 @@
       return {
         src,
         pool,
-        cursor: 0
+        cursor: 0,
+        buffer: null,
+        loadingPromise: null
       };
     }
 
@@ -876,6 +878,8 @@
     let isAudioUnlocked = false;
     let isAudioUnlockInProgress = false;
     const pendingSoundQueue = [];
+    let audioContext = null;
+    let masterGainNode = null;
     const editHistory = [];
     const redoHistory = [];
     let diceSnapshot = { die1: "0", die2: "0", cube: "0" };
@@ -2493,10 +2497,84 @@
       return sound.pool[idx];
     }
 
-    function playSoundNow(sound) {
+    function ensureAudioContext() {
+      if (audioContext) {
+        return audioContext;
+      }
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (typeof Ctx !== "function") {
+        return null;
+      }
+      try {
+        audioContext = new Ctx();
+        masterGainNode = audioContext.createGain();
+        masterGainNode.gain.value = 0.9;
+        masterGainNode.connect(audioContext.destination);
+      } catch (_) {
+        audioContext = null;
+        masterGainNode = null;
+      }
+      return audioContext;
+    }
+
+    async function ensureAudioContextReady() {
+      const ctx = ensureAudioContext();
+      if (!ctx) {
+        return false;
+      }
+      if (ctx.state === "suspended") {
+        try {
+          await ctx.resume();
+        } catch (_) {
+          return false;
+        }
+      }
+      return ctx.state === "running";
+    }
+
+    async function loadSoundBuffer(sound) {
       if (!isSoundDescriptor(sound)) {
+        return null;
+      }
+      if (sound.buffer) {
+        return sound.buffer;
+      }
+      if (sound.loadingPromise) {
+        return sound.loadingPromise;
+      }
+      const ctx = ensureAudioContext();
+      if (!ctx) {
+        return null;
+      }
+      sound.loadingPromise = fetch(sound.src)
+        .then((resp) => {
+          if (!resp.ok) {
+            throw new Error(`Failed to load sound: ${sound.src}`);
+          }
+          return resp.arrayBuffer();
+        })
+        .then((data) => ctx.decodeAudioData(data))
+        .then((buffer) => {
+          sound.buffer = buffer;
+          return buffer;
+        })
+        .catch(() => null)
+        .finally(() => {
+          sound.loadingPromise = null;
+        });
+      return sound.loadingPromise;
+    }
+
+    function preloadAllSoundBuffers() {
+      if (!audioContext) {
         return;
       }
+      void loadSoundBuffer(soundRoll);
+      void loadSoundBuffer(soundCheck);
+      void loadSoundBuffer(soundMove);
+    }
+
+    function playSoundViaHtmlAudio(sound) {
       const audio = pickSoundChannel(sound);
       if (!(audio instanceof HTMLAudioElement)) {
         return;
@@ -2515,6 +2593,24 @@
           }
         });
       }
+    }
+
+    function playSoundNow(sound) {
+      if (!isSoundDescriptor(sound)) {
+        return;
+      }
+      if (audioContext && masterGainNode && sound.buffer) {
+        try {
+          const srcNode = audioContext.createBufferSource();
+          srcNode.buffer = sound.buffer;
+          srcNode.connect(masterGainNode);
+          srcNode.start(0);
+          return;
+        } catch (_) {
+          /* fallback to html audio below */
+        }
+      }
+      playSoundViaHtmlAudio(sound);
     }
 
     function flushPendingSounds() {
@@ -2554,33 +2650,45 @@
         return;
       }
       isAudioUnlockInProgress = true;
-      const probe = pickSoundChannel(soundMove) || new Audio(src);
-      probe.muted = true;
-      probe.preload = "auto";
-      const p = probe.play();
-      if (!p || typeof p.then !== "function") {
-        isAudioUnlocked = true;
-        probe.muted = false;
-        isAudioUnlockInProgress = false;
-        flushPendingSounds();
-        return;
-      }
-      p.then(() => {
-        probe.pause();
-        try {
-          probe.currentTime = 0;
-        } catch (_) {
-          /* ignore */
-        }
-        isAudioUnlocked = true;
-        probe.muted = false;
-        isAudioUnlockInProgress = false;
-        flushPendingSounds();
-      }).catch(() => {
-        isAudioUnlocked = false;
-        probe.muted = false;
-        isAudioUnlockInProgress = false;
-      });
+      ensureAudioContextReady()
+        .then((ready) => {
+          if (ready) {
+            isAudioUnlocked = true;
+            preloadAllSoundBuffers();
+            return;
+          }
+          const probe = pickSoundChannel(soundMove) || new Audio(src);
+          probe.muted = true;
+          probe.preload = "auto";
+          const p = probe.play();
+          if (!p || typeof p.then !== "function") {
+            isAudioUnlocked = true;
+            probe.muted = false;
+            return;
+          }
+          return p.then(() => {
+            probe.pause();
+            try {
+              probe.currentTime = 0;
+            } catch (_) {
+              /* ignore */
+            }
+            isAudioUnlocked = true;
+            probe.muted = false;
+          }).catch(() => {
+            isAudioUnlocked = false;
+            probe.muted = false;
+          });
+        })
+        .catch(() => {
+          isAudioUnlocked = false;
+        })
+        .finally(() => {
+          isAudioUnlockInProgress = false;
+          if (isAudioUnlocked) {
+            flushPendingSounds();
+          }
+        });
     }
 
     function syncSoundToggleButton() {
