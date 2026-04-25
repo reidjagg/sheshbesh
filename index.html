@@ -495,8 +495,9 @@
         <path data-board="corner" d="M590.8 535.2h4A4 4 0 0 1 591 531z" fill="#423122"/>
 
 
+        <g id="checkersUnderArrowsLayer"></g>
         <g id="arrowsLayer" pointer-events="none"></g>
-        <g id="checkersLayer"></g>
+        <g id="checkersOverArrowsLayer"></g>
         <g id="countLabelsLayer"></g>
         <g id="moveAnimationLayer" pointer-events="none"></g>
         <g id="lineSelectionLayer" pointer-events="none"></g>
@@ -563,7 +564,8 @@
     const boardSvg = document.getElementById("boardSvg");
     const boardContent = document.getElementById("boardContent");
     const arrowDefs = document.getElementById("arrowDefs");
-    const checkersLayer = document.getElementById("checkersLayer");
+    const checkersUnderArrowsLayer = document.getElementById("checkersUnderArrowsLayer");
+    const checkersOverArrowsLayer = document.getElementById("checkersOverArrowsLayer");
     const countLabelsLayer = document.getElementById("countLabelsLayer");
     const moveAnimationLayer = document.getElementById("moveAnimationLayer");
     const lineSelectionLayer = document.getElementById("lineSelectionLayer");
@@ -911,6 +913,16 @@
     const redoHistory = [];
     let diceSnapshot = { die1: "0", die2: "0", cube: "0" };
     const arrows = [];
+    function getCheckerSvgLayerForPointId(pointId) {
+      const id = String(pointId);
+      if (arrows.some((arrow) => String(arrow.from) === id)) {
+        return checkersOverArrowsLayer;
+      }
+      if (editMode === "lines" && lineStartPointIndex !== null && String(lineStartPointIndex) === id) {
+        return checkersOverArrowsLayer;
+      }
+      return checkersUnderArrowsLayer;
+    }
     let nextArrowId = 1;
     let lineStartPointIndex = null;
     let moveStartPointId = null;
@@ -1135,17 +1147,21 @@
             });
           }
         }
-        checkersLayer.appendChild(circle);
+        getCheckerSvgLayerForPointId(pointIndex).appendChild(circle);
       }
 
       if (stack.length > 5) {
         const fixedLabelY = point.startY + point.direction * maxTowerSpan;
         const shrinkAnim =
           animation && animation.fromCount > stack.length ? animation : null;
+        const growAnim =
+          animation && animation.fromCount < stack.length ? animation : null;
         const topIdx = stack.length - 1;
         const labelStartOffsetY = shrinkAnim
           ? getCheckerAnimatedDeltaY(point, stack.length, topIdx, shrinkAnim)
-          : 0;
+          : growAnim
+            ? getCheckerAnimatedDeltaY(point, stack.length, topIdx, growAnim)
+            : 0;
         addCountLabel(topX, fixedLabelY, stack.length, style.textColor, labelStartOffsetY);
       }
     }
@@ -1188,7 +1204,7 @@
           spin.setAttribute("repeatCount", "indefinite");
           circle.appendChild(spin);
         }
-        checkersLayer.appendChild(circle);
+        getCheckerSvgLayerForPointId(`bar-${section}`).appendChild(circle);
         if (count > 1) {
           addCountLabel(barX, y, count, style.textColor);
         }
@@ -1502,6 +1518,14 @@
       for (let i = right.length - 1; i >= 0; i -= 1) {
         d += ` L ${right[i].x} ${right[i].y}`;
       }
+      const startRadius = arrowStartWidth / 2;
+      const startTangent = tangentOnQuadratic(p0, p1, p2, 0);
+      const startTangentLen = Math.hypot(startTangent.x, startTangent.y) || 1;
+      const sx = startTangent.x / startTangentLen;
+      const sy = startTangent.y / startTangentLen;
+      const leftStart = left[0];
+      const outerStart = { x: p0.x - sx * startRadius, y: p0.y - sy * startRadius };
+      d += ` Q ${outerStart.x} ${outerStart.y} ${leftStart.x} ${leftStart.y}`;
       d += " Z";
       return d;
     }
@@ -1524,11 +1548,11 @@
         const startStop = document.createElementNS(svgNs, "stop");
         startStop.setAttribute("offset", "0%");
         startStop.setAttribute("stop-color", "#f0f0ff");
-        startStop.setAttribute("stop-opacity", "0.1");
+        startStop.setAttribute("stop-opacity", "0.03");
         const endStop = document.createElementNS(svgNs, "stop");
         endStop.setAttribute("offset", "100%");
         endStop.setAttribute("stop-color", "#f0f0ff");
-        endStop.setAttribute("stop-opacity", "0.4");
+        endStop.setAttribute("stop-opacity", "0.6");
         gradient.appendChild(startStop);
         gradient.appendChild(endStop);
         arrowDefs.appendChild(gradient);
@@ -1695,7 +1719,7 @@
       animatedChecker.setAttribute("fill", style.fill);
       animatedChecker.setAttribute("stroke", style.stroke);
       animatedChecker.setAttribute("stroke-width", "3");
-      checkersLayer.appendChild(animatedChecker);
+      checkersOverArrowsLayer.appendChild(animatedChecker);
 
       return new Promise((resolve) => {
         const durationMs = 180;
@@ -1749,7 +1773,8 @@
     }
 
     function renderBoard() {
-      checkersLayer.replaceChildren();
+      checkersUnderArrowsLayer.replaceChildren();
+      checkersOverArrowsLayer.replaceChildren();
       countLabelsLayer.replaceChildren();
       extrasLayer.replaceChildren();
 
@@ -1858,12 +1883,14 @@
     function handleLinePoint(pointId) {
       if (lineStartPointIndex === null) {
         lineStartPointIndex = pointId;
+        playSound(soundBtn);
         renderBoard();
         return;
       }
 
       if (lineStartPointIndex === pointId) {
         lineStartPointIndex = null;
+        playSound(soundBtn);
         renderBoard();
         return;
       }
@@ -1877,6 +1904,7 @@
       arrows.push(arrow);
       recordEditAction({ type: "addArrow", arrow });
       lineStartPointIndex = null;
+      playSound(soundBtn);
       renderBoard();
     }
 
@@ -2110,37 +2138,76 @@
       renderBoard();
     }
 
-    function setPointStackByNumber(pointNumber, color, count) {
-      const index = pointNumber - 1;
-      if (index < 0 || index >= pointStacks.length) {
+    function buildLongSetupTargets() {
+      const targets = pointStacks.map(() => []);
+      for (let k = 0; k < 15; k += 1) {
+        targets[0].push("white");
+      }
+      for (let k = 0; k < 15; k += 1) {
+        targets[12].push("black");
+      }
+      return targets;
+    }
+
+    function buildShortSetupTargets() {
+      const targets = pointStacks.map(() => []);
+      for (let k = 0; k < 2; k += 1) {
+        targets[0].push("white");
+      }
+      for (let k = 0; k < 5; k += 1) {
+        targets[11].push("white");
+      }
+      for (let k = 0; k < 3; k += 1) {
+        targets[16].push("white");
+      }
+      for (let k = 0; k < 5; k += 1) {
+        targets[18].push("white");
+      }
+      for (let k = 0; k < 2; k += 1) {
+        targets[23].push("black");
+      }
+      for (let k = 0; k < 5; k += 1) {
+        targets[12].push("black");
+      }
+      for (let k = 0; k < 3; k += 1) {
+        targets[7].push("black");
+      }
+      for (let k = 0; k < 5; k += 1) {
+        targets[5].push("black");
+      }
+      return targets;
+    }
+
+    function runStackBuildupAnimation(targetPerPoint) {
+      let any = false;
+      for (let i = 0; i < pointStacks.length; i += 1) {
+        const tgt = targetPerPoint[i];
+        if (tgt.length === 0) {
+          continue;
+        }
+        any = true;
+        const stack = pointStacks[i];
+        stack.length = 0;
+        for (let j = 0; j < tgt.length; j += 1) {
+          stack.push(tgt[j]);
+        }
+        queueTowerShiftAnimation(i, 0, stack.length);
+      }
+      if (!any) {
+        renderBoard();
         return;
       }
-      const stack = pointStacks[index];
-      stack.length = 0;
-      for (let i = 0; i < count; i += 1) {
-        stack.push(color);
-      }
+      renderBoard();
     }
 
     function applyLongNardySetup() {
       clearBoardState();
-      setPointStackByNumber(1, "white", 15);
-      setPointStackByNumber(13, "black", 15);
-      renderBoard();
+      runStackBuildupAnimation(buildLongSetupTargets());
     }
 
     function applyShortNardySetup() {
       clearBoardState();
-      setPointStackByNumber(1, "white", 2);
-      setPointStackByNumber(12, "white", 5);
-      setPointStackByNumber(17, "white", 3);
-      setPointStackByNumber(19, "white", 5);
-
-      setPointStackByNumber(24, "black", 2);
-      setPointStackByNumber(13, "black", 5);
-      setPointStackByNumber(8, "black", 3);
-      setPointStackByNumber(6, "black", 5);
-      renderBoard();
+      runStackBuildupAnimation(buildShortSetupTargets());
     }
 
     function stopDeleteHold() {
@@ -2344,7 +2411,10 @@
       pointLabelsLayer.querySelectorAll("text").forEach((textNode) => {
         applyTextFlipCompensation(textNode);
       });
-      checkersLayer.querySelectorAll("text").forEach((textNode) => {
+      checkersUnderArrowsLayer.querySelectorAll("text").forEach((textNode) => {
+        applyTextFlipCompensation(textNode);
+      });
+      checkersOverArrowsLayer.querySelectorAll("text").forEach((textNode) => {
         applyTextFlipCompensation(textNode);
       });
       countLabelsLayer.querySelectorAll("text").forEach((textNode) => {
@@ -2365,7 +2435,7 @@
       clone.querySelectorAll("animate, animateTransform").forEach((el) => {
         el.remove();
       });
-      clone.querySelectorAll("#checkersLayer circle[style]").forEach((el) => {
+      clone.querySelectorAll("#checkersUnderArrowsLayer circle[style], #checkersOverArrowsLayer circle[style]").forEach((el) => {
         el.removeAttribute("style");
       });
       const styleEl = document.createElementNS(svgNs, "style");
