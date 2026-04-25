@@ -2456,44 +2456,29 @@
       if (isAudioUnlocked) {
         return;
       }
-      const tryUnlock = (audio) => {
-        if (!(audio instanceof HTMLAudioElement)) {
-          return Promise.resolve(false);
-        }
-        const prevMuted = audio.muted;
-        audio.muted = true;
+      const src = soundMove?.src || soundCheck?.src || soundRoll?.src;
+      if (!src) {
+        return;
+      }
+      const probe = new Audio(src);
+      probe.muted = true;
+      probe.preload = "auto";
+      const p = probe.play();
+      if (!p || typeof p.then !== "function") {
+        isAudioUnlocked = true;
+        return;
+      }
+      p.then(() => {
+        probe.pause();
         try {
-          audio.currentTime = 0;
+          probe.currentTime = 0;
         } catch (_) {
           /* ignore */
         }
-        const p = audio.play();
-        if (!p || typeof p.then !== "function") {
-          audio.pause();
-          audio.muted = prevMuted;
-          return Promise.resolve(true);
-        }
-        return p
-          .then(() => {
-            audio.pause();
-            try {
-              audio.currentTime = 0;
-            } catch (_) {
-              /* ignore */
-            }
-            return true;
-          })
-          .catch(() => false)
-          .finally(() => {
-            audio.muted = prevMuted;
-          });
-      };
-
-      Promise.all([tryUnlock(soundRoll), tryUnlock(soundCheck), tryUnlock(soundMove)])
-        .then((results) => {
-          isAudioUnlocked = results.some(Boolean);
-        })
-        .catch(() => {});
+        isAudioUnlocked = true;
+      }).catch(() => {
+        isAudioUnlocked = false;
+      });
     }
 
     function syncSoundToggleButton() {
