@@ -825,9 +825,9 @@
     const rollDiceBtn = document.getElementById("rollDiceBtn");
     const enableShakeBtn = document.getElementById("enableShakeBtn");
     const cubeValueInput = document.getElementById("cubeValueInput");
-    const soundRoll = new Audio("roll.ogg");
-    const soundCheck = new Audio("Capture.60c4c606.mp3");
-    const soundMove = new Audio("Move.3dd52fa3.mp3");
+    const soundRoll = new Audio("sounds/roll.mp3");
+    const soundCheck = new Audio("sounds/capture.mp3");
+    const soundMove = new Audio("sounds/move.mp3");
 
     const modeButtons = {
       white: document.getElementById("modeWhiteBtn"),
@@ -1686,6 +1686,7 @@
       }
       barStacks[section].push(color);
       recordEditAction({ type: "addBar", section, color });
+      playSound(soundMove);
       renderBoard();
     }
 
@@ -1699,6 +1700,7 @@
       }
       const color = stack.pop();
       recordEditAction({ type: "deleteBar", section, color });
+      playSound(soundCheck);
       renderBoard();
       return true;
     }
@@ -1741,11 +1743,13 @@
         stack.push("white");
         recordEditAction({ type: "add", pointIndex, color: "white" });
         queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
+        playSound(soundMove);
       } else if (editMode === "black") {
         const prevCount = stack.length;
         stack.push("black");
         recordEditAction({ type: "add", pointIndex, color: "black" });
         queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
+        playSound(soundMove);
       }
       renderBoard();
     }
@@ -1763,6 +1767,7 @@
       const deletedColor = stack.pop();
       recordEditAction({ type: "delete", pointIndex, color: deletedColor });
       queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
+      playSound(soundCheck);
       renderBoard();
       return true;
     }
@@ -2564,44 +2569,6 @@
       }
     }
 
-    function tryEnableShakeDiceRoll() {
-      if (isShakeMotionListening || typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
-        return;
-      }
-      if (typeof DeviceMotionEvent.requestPermission === "function") {
-        DeviceMotionEvent.requestPermission()
-          .then((state) => {
-            if (state === "granted") {
-              motionPermissionState = "granted";
-              startShakeDiceRollListening();
-              return;
-            }
-            // Keep retry capability on next tap/click.
-            motionPermissionState = "denied";
-          })
-          .catch(() => {
-            // If request was not in a trusted gesture or was interrupted,
-            // keep state retriable instead of permanently locked.
-            motionPermissionState = "unknown";
-          });
-        return;
-      }
-      motionPermissionState = "granted";
-      startShakeDiceRollListening();
-    }
-
-    function autoEnableShakeDiceRollOnLoad() {
-      if (typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
-        return;
-      }
-      // Browsers without explicit permission API (e.g. many Android browsers)
-      // can start motion listening immediately on page load.
-      if (typeof DeviceMotionEvent.requestPermission !== "function") {
-        motionPermissionState = "granted";
-        startShakeDiceRollListening();
-      }
-    }
-
     async function requestShakePermissionAndEnable() {
       if (typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
         motionPermissionState = "denied";
@@ -2705,13 +2672,9 @@
     });
     window.addEventListener("touchstart", unlockAudioOnUserGesture, { passive: true });
     window.addEventListener("click", unlockAudioOnUserGesture);
-    window.addEventListener("touchstart", tryEnableShakeDiceRoll, { passive: true });
-    window.addEventListener("click", tryEnableShakeDiceRoll);
-    window.addEventListener("focus", tryEnableShakeDiceRoll);
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
         lastShakeMagnitude = null;
-        tryEnableShakeDiceRoll();
       }
     });
     window.addEventListener("resize", () => {
@@ -2769,7 +2732,6 @@
     createHitZones();
     syncPointLabelsVisibility();
     setBoardScale(getInitialBoardScale());
-    autoEnableShakeDiceRollOnLoad();
     applyMode("move");
     applyBoardFlip();
     renderBoard();
