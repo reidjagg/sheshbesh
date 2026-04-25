@@ -825,6 +825,32 @@
     const rollDiceBtn = document.getElementById("rollDiceBtn");
     const enableShakeBtn = document.getElementById("enableShakeBtn");
     const cubeValueInput = document.getElementById("cubeValueInput");
+    function resolveBestSoundSrc(baseName) {
+      const probe = document.createElement("audio");
+      const supports = (mime) => {
+        if (!probe || typeof probe.canPlayType !== "function") {
+          return false;
+        }
+        return probe.canPlayType(mime) !== "";
+      };
+      const isAppleMobile = /iPad|iPhone|iPod/i.test(navigator.userAgent || "");
+      const preferred = isAppleMobile
+        ? [
+          { ext: "m4a", mime: "audio/mp4; codecs=\"mp4a.40.2\"" },
+          { ext: "ogg", mime: "audio/ogg; codecs=\"vorbis\"" },
+          { ext: "mp3", mime: "audio/mpeg" }
+        ]
+        : [
+          { ext: "ogg", mime: "audio/ogg; codecs=\"vorbis\"" },
+          { ext: "m4a", mime: "audio/mp4; codecs=\"mp4a.40.2\"" },
+          { ext: "mp3", mime: "audio/mpeg" }
+        ];
+
+      const picked = preferred.find((f) => supports(f.mime));
+      const ext = picked ? picked.ext : "mp3";
+      return `sounds/${baseName}.${ext}`;
+    }
+
     function createSoundPool(src, poolSize = 4) {
       const size = Math.max(1, Number(poolSize) || 1);
       const pool = Array.from({ length: size }, () => {
@@ -842,9 +868,9 @@
       };
     }
 
-    const soundRoll = createSoundPool("sounds/roll.mp3", 3);
-    const soundCheck = createSoundPool("sounds/capture.mp3", 4);
-    const soundMove = createSoundPool("sounds/move.mp3", 4);
+    const soundRoll = createSoundPool(resolveBestSoundSrc("roll"), 3);
+    const soundCheck = createSoundPool(resolveBestSoundSrc("capture"), 4);
+    const soundMove = createSoundPool(resolveBestSoundSrc("move"), 4);
 
     const modeButtons = {
       white: document.getElementById("modeWhiteBtn"),
