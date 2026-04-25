@@ -864,6 +864,8 @@
     let motionPermissionState = "unknown";
     let isSoundEnabled = true;
     let isAudioUnlocked = false;
+    let isAudioUnlockInProgress = false;
+    const pendingSoundQueue = [];
     const editHistory = [];
     const redoHistory = [];
     let diceSnapshot = { die1: "0", die2: "0", cube: "0" };
@@ -2437,10 +2439,19 @@
       }
     }
 
-    function playSound(audio) {
-      if (!isSoundEnabled) {
+    function queuePendingSound(audio) {
+      if (!(audio instanceof HTMLAudioElement)) {
         return;
       }
+      if (pendingSoundQueue[pendingSoundQueue.length - 1] !== audio) {
+        pendingSoundQueue.push(audio);
+      }
+      if (pendingSoundQueue.length > 6) {
+        pendingSoundQueue.shift();
+      }
+    }
+
+    function playSoundNow(audio) {
       if (!(audio instanceof HTMLAudioElement)) {
         return;
       }
@@ -2451,26 +2462,60 @@
       }
       const playPromise = audio.play();
       if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch(() => {
-          isAudioUnlocked = false;
+        playPromise.catch((error) => {
+          if (error && error.name === "NotAllowedError") {
+            isAudioUnlocked = false;
+            queuePendingSound(audio);
+          }
         });
       }
     }
 
+    function flushPendingSounds() {
+      if (!isAudioUnlocked || !isSoundEnabled || pendingSoundQueue.length === 0) {
+        return;
+      }
+      const queued = pendingSoundQueue.splice(0, pendingSoundQueue.length);
+      queued.forEach((audio) => {
+        playSoundNow(audio);
+      });
+    }
+
+    function playSound(audio) {
+      if (!isSoundEnabled) {
+        return;
+      }
+      if (!(audio instanceof HTMLAudioElement)) {
+        return;
+      }
+      if (!isAudioUnlocked) {
+        queuePendingSound(audio);
+        return;
+      }
+      playSoundNow(audio);
+    }
+
     function unlockAudioOnUserGesture() {
       if (isAudioUnlocked) {
+        flushPendingSounds();
+        return;
+      }
+      if (isAudioUnlockInProgress) {
         return;
       }
       const src = soundMove?.src || soundCheck?.src || soundRoll?.src;
       if (!src) {
         return;
       }
+      isAudioUnlockInProgress = true;
       const probe = new Audio(src);
       probe.muted = true;
       probe.preload = "auto";
       const p = probe.play();
       if (!p || typeof p.then !== "function") {
         isAudioUnlocked = true;
+        isAudioUnlockInProgress = false;
+        flushPendingSounds();
         return;
       }
       p.then(() => {
@@ -2481,8 +2526,11 @@
           /* ignore */
         }
         isAudioUnlocked = true;
+        isAudioUnlockInProgress = false;
+        flushPendingSounds();
       }).catch(() => {
         isAudioUnlocked = false;
+        isAudioUnlockInProgress = false;
       });
     }
 
