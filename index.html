@@ -2500,22 +2500,13 @@
       if (!soundToggleBtn) {
         return;
       }
-      soundToggleBtn.textContent = isSoundEnabled ? "🔊" : "🔈";
+      soundToggleBtn.textContent = isSoundEnabled ? "Звук 🔊" : "Звук 🔈";
       soundToggleBtn.setAttribute("aria-pressed", isSoundEnabled ? "true" : "false");
       soundToggleBtn.setAttribute("title", isSoundEnabled ? "Выключить звук" : "Включить звук");
     }
 
     function initSoundFromStorage() {
-      try {
-        const stored = localStorage.getItem(SOUND_ENABLED_STORAGE_KEY);
-        if (stored === "0") {
-          isSoundEnabled = false;
-        } else if (stored === "1") {
-          isSoundEnabled = true;
-        }
-      } catch (_) {
-        /* ignore */
-      }
+      isSoundEnabled = true;
       syncSoundToggleButton();
     }
 
