@@ -2439,9 +2439,6 @@
       if (!(audio instanceof HTMLAudioElement)) {
         return;
       }
-      if (!isAudioUnlocked) {
-        unlockAudioOnUserGesture();
-      }
       try {
         audio.currentTime = 0;
       } catch (_) {
@@ -2449,7 +2446,9 @@
       }
       const playPromise = audio.play();
       if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch(() => {});
+        playPromise.catch(() => {
+          isAudioUnlocked = false;
+        });
       }
     }
 
@@ -2459,7 +2458,7 @@
       }
       const tryUnlock = (audio) => {
         if (!(audio instanceof HTMLAudioElement)) {
-          return Promise.resolve();
+          return Promise.resolve(false);
         }
         const prevMuted = audio.muted;
         audio.muted = true;
@@ -2472,7 +2471,7 @@
         if (!p || typeof p.then !== "function") {
           audio.pause();
           audio.muted = prevMuted;
-          return Promise.resolve();
+          return Promise.resolve(true);
         }
         return p
           .then(() => {
@@ -2482,16 +2481,17 @@
             } catch (_) {
               /* ignore */
             }
+            return true;
           })
-          .catch(() => {})
+          .catch(() => false)
           .finally(() => {
             audio.muted = prevMuted;
           });
       };
 
       Promise.all([tryUnlock(soundRoll), tryUnlock(soundCheck), tryUnlock(soundMove)])
-        .then(() => {
-          isAudioUnlocked = true;
+        .then((results) => {
+          isAudioUnlocked = results.some(Boolean);
         })
         .catch(() => {});
     }
@@ -2727,8 +2727,8 @@
       isDeleteDragging = false;
       stopDeleteHold();
     });
-    window.addEventListener("touchstart", unlockAudioOnUserGesture, { passive: true, once: true });
-    window.addEventListener("click", unlockAudioOnUserGesture, { once: true });
+    window.addEventListener("touchstart", unlockAudioOnUserGesture, { passive: true });
+    window.addEventListener("click", unlockAudioOnUserGesture);
     window.addEventListener("touchstart", tryEnableShakeDiceRoll, { passive: true });
     window.addEventListener("click", tryEnableShakeDiceRoll);
     window.addEventListener("focus", tryEnableShakeDiceRoll);
