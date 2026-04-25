@@ -825,9 +825,24 @@
     const rollDiceBtn = document.getElementById("rollDiceBtn");
     const enableShakeBtn = document.getElementById("enableShakeBtn");
     const cubeValueInput = document.getElementById("cubeValueInput");
-    const soundRoll = new Audio("sounds/roll.mp3");
-    const soundCheck = new Audio("sounds/capture.mp3");
-    const soundMove = new Audio("sounds/move.mp3");
+    function createSoundPool(src, poolSize = 4) {
+      const size = Math.max(1, Number(poolSize) || 1);
+      const pool = Array.from({ length: size }, () => {
+        const audio = new Audio(src);
+        audio.preload = "auto";
+        audio.volume = 0.9;
+        return audio;
+      });
+      return {
+        src,
+        pool,
+        cursor: 0
+      };
+    }
+
+    const soundRoll = createSoundPool("sounds/roll.mp3", 3);
+    const soundCheck = createSoundPool("sounds/capture.mp3", 4);
+    const soundMove = createSoundPool("sounds/move.mp3", 4);
 
     const modeButtons = {
       white: document.getElementById("modeWhiteBtn"),
@@ -836,11 +851,6 @@
       move: document.getElementById("modeMoveBtn"),
       delete: document.getElementById("modeDeleteBtn")
     };
-    [soundRoll, soundCheck, soundMove].forEach((audio) => {
-      audio.preload = "auto";
-      audio.volume = 0.9;
-    });
-
     const baseBoardWidth = 808;
     const radius = 21.284;
     const defaultStep = radius * 2 + 1;
@@ -2439,19 +2449,41 @@
       }
     }
 
-    function queuePendingSound(audio) {
-      if (!(audio instanceof HTMLAudioElement)) {
+    function isSoundDescriptor(sound) {
+      return Boolean(
+        sound &&
+        typeof sound === "object" &&
+        typeof sound.src === "string" &&
+        Array.isArray(sound.pool)
+      );
+    }
+
+    function queuePendingSound(sound) {
+      if (!isSoundDescriptor(sound)) {
         return;
       }
-      if (pendingSoundQueue[pendingSoundQueue.length - 1] !== audio) {
-        pendingSoundQueue.push(audio);
+      if (pendingSoundQueue[pendingSoundQueue.length - 1] !== sound) {
+        pendingSoundQueue.push(sound);
       }
       if (pendingSoundQueue.length > 6) {
         pendingSoundQueue.shift();
       }
     }
 
-    function playSoundNow(audio) {
+    function pickSoundChannel(sound) {
+      if (!isSoundDescriptor(sound) || sound.pool.length === 0) {
+        return null;
+      }
+      const idx = sound.cursor % sound.pool.length;
+      sound.cursor = (sound.cursor + 1) % sound.pool.length;
+      return sound.pool[idx];
+    }
+
+    function playSoundNow(sound) {
+      if (!isSoundDescriptor(sound)) {
+        return;
+      }
+      const audio = pickSoundChannel(sound);
       if (!(audio instanceof HTMLAudioElement)) {
         return;
       }
@@ -2465,7 +2497,7 @@
         playPromise.catch((error) => {
           if (error && error.name === "NotAllowedError") {
             isAudioUnlocked = false;
-            queuePendingSound(audio);
+            queuePendingSound(sound);
           }
         });
       }
@@ -2476,23 +2508,23 @@
         return;
       }
       const queued = pendingSoundQueue.splice(0, pendingSoundQueue.length);
-      queued.forEach((audio) => {
-        playSoundNow(audio);
+      queued.forEach((sound) => {
+        playSoundNow(sound);
       });
     }
 
-    function playSound(audio) {
+    function playSound(sound) {
       if (!isSoundEnabled) {
         return;
       }
-      if (!(audio instanceof HTMLAudioElement)) {
+      if (!isSoundDescriptor(sound)) {
         return;
       }
       if (!isAudioUnlocked) {
-        queuePendingSound(audio);
+        queuePendingSound(sound);
         return;
       }
-      playSoundNow(audio);
+      playSoundNow(sound);
     }
 
     function unlockAudioOnUserGesture() {
@@ -2508,12 +2540,13 @@
         return;
       }
       isAudioUnlockInProgress = true;
-      const probe = new Audio(src);
+      const probe = pickSoundChannel(soundMove) || new Audio(src);
       probe.muted = true;
       probe.preload = "auto";
       const p = probe.play();
       if (!p || typeof p.then !== "function") {
         isAudioUnlocked = true;
+        probe.muted = false;
         isAudioUnlockInProgress = false;
         flushPendingSounds();
         return;
@@ -2526,10 +2559,12 @@
           /* ignore */
         }
         isAudioUnlocked = true;
+        probe.muted = false;
         isAudioUnlockInProgress = false;
         flushPendingSounds();
       }).catch(() => {
         isAudioUnlocked = false;
+        probe.muted = false;
         isAudioUnlockInProgress = false;
       });
     }
@@ -2596,7 +2631,7 @@
       lastShakeMagnitude = magnitude;
 
       // Max sensitivity: trigger even on light hand movement.
-      const shakeThreshold = 5;
+      const shakeThreshold = 3;
       const shakeCooldownMs = 700;
       const now = Date.now();
       if (delta < shakeThreshold || (now - lastShakeRollAt) < shakeCooldownMs) {
@@ -2612,8 +2647,21 @@
       }
       window.addEventListener("devicemotion", handleDeviceMotionForDiceRoll, { passive: true });
       isShakeMotionListening = true;
+      lastShakeMagnitude = null;
       if (enableShakeBtn) {
         enableShakeBtn.classList.add("active");
+      }
+    }
+
+    function stopShakeDiceRollListening() {
+      if (!isShakeMotionListening || typeof window === "undefined") {
+        return;
+      }
+      window.removeEventListener("devicemotion", handleDeviceMotionForDiceRoll);
+      isShakeMotionListening = false;
+      lastShakeMagnitude = null;
+      if (enableShakeBtn) {
+        enableShakeBtn.classList.remove("active");
       }
     }
 
@@ -2662,8 +2710,12 @@
     rollDiceBtn.addEventListener("click", () => {
       rollDiceRandomly();
     });
-    enableShakeBtn.addEventListener("click", () => {
-      requestShakePermissionAndEnable();
+    enableShakeBtn.addEventListener("click", async () => {
+      if (isShakeMotionListening) {
+        stopShakeDiceRollListening();
+        return;
+      }
+      await requestShakePermissionAndEnable();
     });
     cubeValueInput.addEventListener("change", () => {
       recordDoublingCubeChangeIfNeeded();
