@@ -555,7 +555,6 @@
           </select>
         </label>
         <button id="rollDiceBtn" class="mode-btn" type="button">🎲👋</button>
-        <button id="enableShakeBtn" class="mode-btn" type="button">📳👋</button>
       </div>
     </div>
 
@@ -1962,7 +1961,10 @@
       renderBoard();
     }
 
-    function undoLastEdit() {
+    async function undoLastEdit() {
+      if (isMoveAnimating) {
+        return;
+      }
       if (lineStartPointIndex !== null) {
         redoHistory.push({ type: "lineStartSelection", pointIndex: lineStartPointIndex });
         lineStartPointIndex = null;
@@ -2005,12 +2007,25 @@
         const toStack = getPointStackById(lastAction.to);
         const fromPrevCount = fromStack ? fromStack.length : 0;
         const toPrevCount = toStack ? toStack.length : 0;
+        const reverseFromAnchor = getAnchorForArrow(lastAction.to, false);
         const moved = popTopChecker(lastAction.to);
-        if (moved) {
-          pushChecker(lastAction.from, moved);
-        }
         queueTowerShiftAnimation(lastAction.to, toPrevCount, Math.max(0, toPrevCount - 1));
         queueTowerShiftAnimation(lastAction.from, fromPrevCount, fromPrevCount + 1);
+        if (moved) {
+          const reverseToAnchor = getCheckerPlacementAnchor(lastAction.from, moved);
+          isMoveAnimating = true;
+          pushChecker(lastAction.from, moved);
+          moveInFlight = { toPointId: lastAction.from, color: moved };
+          if (lastAction.from === "bar-top" || lastAction.from === "bar-bottom") {
+            playSound(soundCheck);
+          } else {
+            playSound(soundMove);
+          }
+          renderBoard();
+          await animateCheckerMove(moved, reverseFromAnchor, reverseToAnchor);
+          moveInFlight = null;
+          isMoveAnimating = false;
+        }
         moveStartPointId = null;
         redoHistory.push(lastAction);
         renderBoard();
@@ -2932,13 +2947,15 @@
     rollDiceBtn.addEventListener("click", () => {
       rollDiceRandomly();
     });
-    enableShakeBtn.addEventListener("click", async () => {
-      if (isShakeMotionListening) {
-        stopShakeDiceRollListening();
-        return;
-      }
-      await requestShakePermissionAndEnable();
-    });
+    if (enableShakeBtn) {
+      enableShakeBtn.addEventListener("click", async () => {
+        if (isShakeMotionListening) {
+          stopShakeDiceRollListening();
+          return;
+        }
+        await requestShakePermissionAndEnable();
+      });
+    }
     cubeValueInput.addEventListener("change", () => {
       playSound(soundRoll);
       recordDoublingCubeChangeIfNeeded();
