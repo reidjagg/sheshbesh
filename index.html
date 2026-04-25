@@ -2177,17 +2177,23 @@
             activeDeletePointIndex = null;
           }
         });
-        rect.addEventListener("click", () => {
+        rect.addEventListener("pointerdown", (event) => {
+          if (event.button !== -1 && event.button !== 0) {
+            return;
+          }
           if (editMode === "lines") {
             handleLinePoint(pointId);
+            event.preventDefault();
             return;
           }
           if (editMode === "move") {
             void handleMovePoint(pointId);
+            event.preventDefault();
             return;
           }
           if (editMode !== "delete") {
             editPoint(pointIndex);
+            event.preventDefault();
           }
         });
         hitZonesLayer.appendChild(rect);
@@ -2211,7 +2217,10 @@
           event.preventDefault();
         }
       });
-      barTopRect.addEventListener("click", () => {
+      barTopRect.addEventListener("pointerdown", (event) => {
+        if (event.button !== -1 && event.button !== 0) {
+          return;
+        }
         if (editMode === "lines") {
           handleLinePoint("bar-top");
         } else if (editMode === "move") {
@@ -2221,6 +2230,7 @@
         } else if (editMode === "black") {
           addCheckerToBar("top", "black");
         }
+        event.preventDefault();
       });
       hitZonesLayer.appendChild(barTopRect);
 
@@ -2242,7 +2252,10 @@
           event.preventDefault();
         }
       });
-      barBottomRect.addEventListener("click", () => {
+      barBottomRect.addEventListener("pointerdown", (event) => {
+        if (event.button !== -1 && event.button !== 0) {
+          return;
+        }
         if (editMode === "lines") {
           handleLinePoint("bar-bottom");
         } else if (editMode === "move") {
@@ -2252,6 +2265,7 @@
         } else if (editMode === "black") {
           addCheckerToBar("bottom", "black");
         }
+        event.preventDefault();
       });
       hitZonesLayer.appendChild(barBottomRect);
     }
