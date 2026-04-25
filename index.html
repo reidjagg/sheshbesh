@@ -855,7 +855,7 @@
     let lastShakeMagnitude = null;
     let lastShakeRollAt = 0;
     let isShakeMotionListening = false;
-    let hasTriedMotionPermission = false;
+    let motionPermissionState = "unknown";
     const editHistory = [];
     const redoHistory = [];
     let diceSnapshot = { die1: "0", die2: "0", cube: "0" };
@@ -2439,20 +2439,28 @@
     }
 
     function tryEnableShakeDiceRoll() {
-      if (hasTriedMotionPermission || typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
+      if (isShakeMotionListening || typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
         return;
       }
-      hasTriedMotionPermission = true;
       if (typeof DeviceMotionEvent.requestPermission === "function") {
+        if (motionPermissionState === "denied") {
+          return;
+        }
         DeviceMotionEvent.requestPermission()
           .then((state) => {
             if (state === "granted") {
+              motionPermissionState = "granted";
               startShakeDiceRollListening();
+              return;
             }
+            motionPermissionState = "denied";
           })
-          .catch(() => {});
+          .catch(() => {
+            motionPermissionState = "denied";
+          });
         return;
       }
+      motionPermissionState = "granted";
       startShakeDiceRollListening();
     }
 
@@ -2518,8 +2526,8 @@
       isDeleteDragging = false;
       stopDeleteHold();
     });
-    window.addEventListener("touchstart", tryEnableShakeDiceRoll, { passive: true, once: true });
-    window.addEventListener("click", tryEnableShakeDiceRoll, { once: true });
+    window.addEventListener("touchstart", tryEnableShakeDiceRoll, { passive: true });
+    window.addEventListener("click", tryEnableShakeDiceRoll);
     window.addEventListener("resize", () => {
       setBoardScale(currentBoardScale);
     });
@@ -2574,7 +2582,6 @@
     createHitZones();
     syncPointLabelsVisibility();
     setBoardScale(getInitialBoardScale());
-    tryEnableShakeDiceRoll();
     applyMode("move");
     applyBoardFlip();
     renderBoard();
