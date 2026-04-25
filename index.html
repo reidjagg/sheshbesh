@@ -233,6 +233,16 @@
       color: var(--ui-text);
     }
 
+    #enableShakeBtn {
+      display: none;
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      #enableShakeBtn {
+        display: inline-flex;
+      }
+    }
+
     .checker-icon {
       width: 15px;
       height: 15px;
@@ -854,6 +864,8 @@
     let currentBoardScale = 60;
     let shouldAnimateDice = false;
     let shouldAnimateDoublingCube = false;
+    let isDiceRollTransition = false;
+    let diceRollRevealTimerId = null;
     let lastShakeMagnitude = null;
     let lastShakeRollAt = 0;
     let isShakeMotionListening = false;
@@ -1168,7 +1180,7 @@
       pointLabelsLayer.setAttribute("visibility", arePointLabelsVisible ? "visible" : "hidden");
     }
 
-    function drawDie(x, y, value, animateSpin = false) {
+    function drawDie(x, y, value, animateSpin = false, animationDelayMs = 0) {
       const dieSize = 36.75;
       const cornerRadius = 3.675;
       const pipRadius = 3.675;
@@ -1222,8 +1234,35 @@
       });
       extrasLayer.appendChild(dieGroup);
       if (animateSpin) {
-        animateDoublingCubeSpin(dieGroup);
+        animateDieRollIn(dieGroup, animationDelayMs);
       }
+    }
+
+    function animateDieRollIn(dieGroup, delayMs = 0) {
+      if (!(dieGroup instanceof SVGElement) || typeof dieGroup.animate !== "function") {
+        return;
+      }
+      const startTransform = "translateX(220px) rotate(-540deg)";
+      dieGroup.style.transform = startTransform;
+      dieGroup.style.opacity = "0.95";
+      const animation = dieGroup.animate(
+        [
+          { transform: startTransform, opacity: 0.95 },
+          { transform: "translateX(110px) rotate(-300deg)", offset: 0.45, opacity: 1 },
+          { transform: "translateX(-8px) rotate(20deg)", offset: 0.82, opacity: 1 },
+          { transform: "translateX(0px) rotate(0deg)", opacity: 1 }
+        ],
+        {
+          duration: 820,
+          delay: Math.max(0, Number(delayMs) || 0),
+          easing: "cubic-bezier(0.18, 0.9, 0.22, 1)",
+          fill: "forwards"
+        }
+      );
+      animation.addEventListener("finish", () => {
+        dieGroup.style.transform = "";
+        dieGroup.style.opacity = "1";
+      });
     }
 
     function animateDoublingCubeSpin(cubeGroup) {
@@ -1678,11 +1717,11 @@
       const dieTwo = clampInt(dieTwoInput.value, 0, 6, 0);
       dieOneInput.value = String(dieOne);
       dieTwoInput.value = String(dieTwo);
-      if (dieOne > 0) {
-        drawDie(689, 261, dieOne, shouldAnimateDice);
+      if (!isDiceRollTransition && dieOne > 0) {
+        drawDie(689, 261, dieOne, shouldAnimateDice, 0);
       }
-      if (dieTwo > 0) {
-        drawDie(745, 261, dieTwo, shouldAnimateDice);
+      if (!isDiceRollTransition && dieTwo > 0) {
+        drawDie(745, 261, dieTwo, shouldAnimateDice, 70);
       }
 
       const cubeValue = clampInt(cubeValueInput.value, 0, 64, 0);
@@ -2398,11 +2437,22 @@
         prev: { ...diceSnapshot },
         next
       });
-      dieOneInput.value = next.die1;
-      dieTwoInput.value = next.die2;
-      shouldAnimateDice = true;
+      if (diceRollRevealTimerId !== null) {
+        window.clearTimeout(diceRollRevealTimerId);
+        diceRollRevealTimerId = null;
+      }
+      isDiceRollTransition = true;
+      shouldAnimateDice = false;
       renderBoard();
-      syncDiceSnapshotFromInputs();
+      diceRollRevealTimerId = window.setTimeout(() => {
+        dieOneInput.value = next.die1;
+        dieTwoInput.value = next.die2;
+        isDiceRollTransition = false;
+        shouldAnimateDice = true;
+        renderBoard();
+        syncDiceSnapshotFromInputs();
+        diceRollRevealTimerId = null;
+      }, 70);
     }
 
     function handleDeviceMotionForDiceRoll(event) {
