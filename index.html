@@ -155,21 +155,6 @@
       background: var(--ui-active);
     }
 
-    #togglePointLabelsBtn:active {
-      background: var(--ui-btn);
-      border-color: var(--ui-btn-border);
-      box-shadow: none;
-    }
-
-    #togglePointLabelsBtn:focus {
-      outline: none;
-    }
-
-    #togglePointLabelsBtn:focus-visible {
-      outline: 2px solid var(--ui-btn-border);
-      outline-offset: 2px;
-    }
-
     .panel-modes {
       margin-top: 6px;
       display: grid;
@@ -345,8 +330,8 @@
     .board-palette-wrap {
       position: relative;
       display: inline-block;
-      width: 52px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       vertical-align: middle;
       flex-shrink: 0;
     }
@@ -387,8 +372,8 @@
       z-index: 1000;
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      padding: 6px;
+      gap: 4px;
+      padding: 4px;
       margin: 0;
       list-style: none;
       background: var(--ui-surface-2);
@@ -404,11 +389,11 @@
 
     .board-palette-option {
       display: block;
-      width: 52px;
+      width: 22px;
       height: 22px;
       margin: 0;
       padding: 0;
-      border: 2px solid transparent;
+      border: 1px solid transparent;
       border-radius: 4px;
       cursor: pointer;
       box-sizing: border-box;
@@ -433,7 +418,6 @@
   <div class="actions actions--toolbar" aria-label="Экспорт и вид доски">
       <button id="exportPngBtn" type="button">💾</button>
       <button id="flipBoardBtn" type="button">🔄</button>
-      <button id="togglePointLabelsBtn" type="button">🔢</button>
       <button id="zoomOutBtn" type="button">🔍</button>
       <button id="zoomInBtn" type="button">🔎</button>
       <div class="value-chip board-palette-chip">
@@ -454,6 +438,7 @@
           <div id="paletteMenuDropdown" class="board-palette-dropdown" role="listbox" hidden aria-label="Палитры"></div>
         </div>
       </div>
+      <button id="soundToggleBtn" type="button" aria-label="Переключить звук" title="Звук">🔊</button>
     </div>
 
     <div class="actions actions--setup" aria-label="Расстановка и отмена">
@@ -592,7 +577,9 @@
     const paletteSwatchPreview = document.getElementById("paletteSwatchPreview");
     const paletteMenuBtn = document.getElementById("paletteMenuBtn");
     const paletteMenuDropdown = document.getElementById("paletteMenuDropdown");
+    const soundToggleBtn = document.getElementById("soundToggleBtn");
     const BOARD_PALETTE_STORAGE_KEY = "sheshbesh-board-palette";
+    const SOUND_ENABLED_STORAGE_KEY = "sheshbesh-sound-enabled";
     const PALETTE_MENU_ORDER = ["classic", "maket", "nightBlue", "menu", "lightWood"];
     const PALETTE_OPTION_LABELS = {
       classic: "Классика",
@@ -829,7 +816,6 @@
     const zoomInBtn = document.getElementById("zoomInBtn");
     const exportPngBtn = document.getElementById("exportPngBtn");
     const flipBoardBtn = document.getElementById("flipBoardBtn");
-    const togglePointLabelsBtn = document.getElementById("togglePointLabelsBtn");
     const backBtn = document.getElementById("backBtn");
     const clearBtn = document.getElementById("clearBtn");
     const setupLongBtn = document.getElementById("setupLongBtn");
@@ -839,6 +825,9 @@
     const rollDiceBtn = document.getElementById("rollDiceBtn");
     const enableShakeBtn = document.getElementById("enableShakeBtn");
     const cubeValueInput = document.getElementById("cubeValueInput");
+    const soundRoll = new Audio("roll.ogg");
+    const soundCheck = new Audio("Capture.60c4c606.mp3");
+    const soundMove = new Audio("Move.3dd52fa3.mp3");
 
     const modeButtons = {
       white: document.getElementById("modeWhiteBtn"),
@@ -847,6 +836,10 @@
       move: document.getElementById("modeMoveBtn"),
       delete: document.getElementById("modeDeleteBtn")
     };
+    [soundRoll, soundCheck, soundMove].forEach((audio) => {
+      audio.preload = "auto";
+      audio.volume = 0.9;
+    });
 
     const baseBoardWidth = 808;
     const radius = 21.284;
@@ -856,7 +849,6 @@
     const arrowStartWidth = cellWidth;
     const arrowEndWidth = cellWidth * 0.1;
     let isBoardFlipped = false;
-    let arePointLabelsVisible = true;
     let editMode = "move";
     let isDeleteDragging = false;
     let activeDeletePointIndex = null;
@@ -870,6 +862,7 @@
     let lastShakeRollAt = 0;
     let isShakeMotionListening = false;
     let motionPermissionState = "unknown";
+    let isSoundEnabled = true;
     const editHistory = [];
     const redoHistory = [];
     let diceSnapshot = { die1: "0", die2: "0", cube: "0" };
@@ -1177,7 +1170,7 @@
     }
 
     function syncPointLabelsVisibility() {
-      pointLabelsLayer.setAttribute("visibility", arePointLabelsVisible ? "visible" : "hidden");
+      pointLabelsLayer.setAttribute("visibility", "visible");
     }
 
     function drawDie(x, y, value, animateSpin = false, animationDelayMs = 0) {
@@ -1380,24 +1373,31 @@
       const midY = (from.y + to.y) / 2;
       const centerX = 562;
       const centerY = 279;
-      const centerLinePoint = { x: centerX, y: from.y };
-      const toCenterLineX = centerLinePoint.x - from.x;
-      const toCenterLineY = centerLinePoint.y - from.y;
-      const toCenterLineLen = Math.hypot(toCenterLineX, toCenterLineY);
-      const startDir = toCenterLineLen > 0.001
-        ? { x: toCenterLineX / toCenterLineLen, y: toCenterLineY / toCenterLineLen }
-        : { x: dx / distance, y: dy / distance };
-      const towardCenterX = centerX - midX;
-      const towardCenterY = centerY - midY;
-      const towardCenterLen = Math.hypot(towardCenterX, towardCenterY) || 1;
-      const ux = towardCenterX / towardCenterLen;
-      const uy = towardCenterY / towardCenterLen;
-      const curve = Math.min(220, Math.max(56, distance * 0.52));
-      const baseControlX = midX + ux * (curve * 0.58);
-      const baseControlY = midY + uy * (curve * 0.58);
-      const startLock = 24;
-      const cx = (baseControlX * 0.72) + ((from.x + startDir.x * startLock) * 0.28);
-      const cy = (baseControlY * 0.72) + ((from.y + startDir.y * startLock) * 0.28);
+      const towardCenterLineY = centerY - midY;
+      const horizontalSpan = Math.abs(dx);
+      const curve = Math.min(320, Math.max(90, distance * 0.74));
+      const horizontalBend = Math.max(28, curve * 0.22);
+      const baseControlX = midX + Math.sign(centerX - midX || 1) * horizontalBend;
+      const towardCenterSign = Math.sign(towardCenterLineY) || (midY <= centerY ? 1 : -1);
+      const centerPullMagnitude = Math.max(Math.abs(towardCenterLineY), 74);
+      const verticalPull = towardCenterSign * centerPullMagnitude * 0.96;
+      const verticalOvershoot = towardCenterSign * Math.min(140, Math.max(44, horizontalSpan * 0.26));
+      const baseControlY = midY + verticalPull + verticalOvershoot;
+
+      // Taller start columns shift bend closer to line end.
+      let sourceStackHeight = 0;
+      if (fromTargetId === "bar-top" || fromTargetId === "bar-bottom") {
+        sourceStackHeight = (fromTargetId === "bar-top" ? barStacks.top.length : barStacks.bottom.length);
+      } else {
+        const fromPointIndex = Number(fromTargetId);
+        if (Number.isInteger(fromPointIndex) && fromPointIndex >= 0 && fromPointIndex < pointStacks.length) {
+          sourceStackHeight = pointStacks[fromPointIndex].length;
+        }
+      }
+      const normalizedHeight = Math.max(0, sourceStackHeight - 1);
+      const endBias = Math.min(0.62, Math.pow(normalizedHeight / 5, 1.35) * 0.62);
+      const cx = baseControlX + (to.x - midX) * endBias;
+      const cy = baseControlY + (to.y - midY) * endBias;
 
       return {
         from,
@@ -1654,7 +1654,7 @@
       checkersLayer.appendChild(animatedChecker);
 
       return new Promise((resolve) => {
-        const durationMs = 250;
+        const durationMs = 180;
         const startTs = performance.now();
 
         function tick(now) {
@@ -1872,6 +1872,11 @@
       moveInFlight = { toPointId: pointId, color: movedColor || color };
       queueTowerShiftAnimation(pointId, toPrevCount, toPrevCount + 1);
       queueTowerShiftAnimation(fromPointId, fromPrevCount, Math.max(0, fromPrevCount - 1));
+      if (pointId === "bar-top" || pointId === "bar-bottom") {
+        playSound(soundCheck);
+      } else {
+        playSound(soundMove);
+      }
       renderBoard();
       await animateCheckerMove(movedColor || color, fromAnchor, toAnchor);
       moveInFlight = null;
@@ -2426,6 +2431,47 @@
       }
     }
 
+    function playSound(audio) {
+      if (!isSoundEnabled) {
+        return;
+      }
+      if (!(audio instanceof HTMLAudioElement)) {
+        return;
+      }
+      try {
+        audio.currentTime = 0;
+      } catch (_) {
+        /* ignore */
+      }
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {});
+      }
+    }
+
+    function syncSoundToggleButton() {
+      if (!soundToggleBtn) {
+        return;
+      }
+      soundToggleBtn.textContent = isSoundEnabled ? "🔊" : "🔈";
+      soundToggleBtn.setAttribute("aria-pressed", isSoundEnabled ? "true" : "false");
+      soundToggleBtn.setAttribute("title", isSoundEnabled ? "Выключить звук" : "Включить звук");
+    }
+
+    function initSoundFromStorage() {
+      try {
+        const stored = localStorage.getItem(SOUND_ENABLED_STORAGE_KEY);
+        if (stored === "0") {
+          isSoundEnabled = false;
+        } else if (stored === "1") {
+          isSoundEnabled = true;
+        }
+      } catch (_) {
+        /* ignore */
+      }
+      syncSoundToggleButton();
+    }
+
     function rollDiceRandomly() {
       const next = {
         die1: String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1)),
@@ -2441,6 +2487,7 @@
         window.clearTimeout(diceRollRevealTimerId);
         diceRollRevealTimerId = null;
       }
+      playSound(soundRoll);
       isDiceRollTransition = true;
       shouldAnimateDice = false;
       renderBoard();
@@ -2568,10 +2615,6 @@
     zoomInBtn.addEventListener("click", () => {
       setBoardScale(currentBoardScale + 10);
     });
-    togglePointLabelsBtn.addEventListener("click", () => {
-      arePointLabelsVisible = !arePointLabelsVisible;
-      syncPointLabelsVisibility();
-    });
     dieOneInput.addEventListener("change", () => {
       recordDiceChangeIfNeeded();
     });
@@ -2591,6 +2634,15 @@
     paletteMenuBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       setPaletteMenuOpen(paletteMenuDropdown.hidden);
+    });
+    soundToggleBtn.addEventListener("click", () => {
+      isSoundEnabled = !isSoundEnabled;
+      syncSoundToggleButton();
+      try {
+        localStorage.setItem(SOUND_ENABLED_STORAGE_KEY, isSoundEnabled ? "1" : "0");
+      } catch (_) {
+        /* ignore */
+      }
     });
     document.addEventListener("mousedown", (event) => {
       if (!paletteMenuDropdown || paletteMenuDropdown.hidden) {
@@ -2686,6 +2738,7 @@
     });
 
     initBoardPaletteFromStorage();
+    initSoundFromStorage();
     createPointLabels();
     createHitZones();
     syncPointLabelsVisibility();
