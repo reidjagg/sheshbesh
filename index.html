@@ -2420,8 +2420,9 @@
       const delta = Math.abs(magnitude - lastShakeMagnitude);
       lastShakeMagnitude = magnitude;
 
-      const shakeThreshold = 14;
-      const shakeCooldownMs = 1200;
+      // Max sensitivity: trigger even on light hand movement.
+      const shakeThreshold = 1.2;
+      const shakeCooldownMs = 700;
       const now = Date.now();
       if (delta < shakeThreshold || (now - lastShakeRollAt) < shakeCooldownMs) {
         return;
@@ -2443,9 +2444,6 @@
         return;
       }
       if (typeof DeviceMotionEvent.requestPermission === "function") {
-        if (motionPermissionState === "denied") {
-          return;
-        }
         DeviceMotionEvent.requestPermission()
           .then((state) => {
             if (state === "granted") {
@@ -2453,10 +2451,13 @@
               startShakeDiceRollListening();
               return;
             }
+            // Keep retry capability on next tap/click.
             motionPermissionState = "denied";
           })
           .catch(() => {
-            motionPermissionState = "denied";
+            // If request was not in a trusted gesture or was interrupted,
+            // keep state retriable instead of permanently locked.
+            motionPermissionState = "unknown";
           });
         return;
       }
@@ -2540,6 +2541,13 @@
     });
     window.addEventListener("touchstart", tryEnableShakeDiceRoll, { passive: true });
     window.addEventListener("click", tryEnableShakeDiceRoll);
+    window.addEventListener("focus", tryEnableShakeDiceRoll);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        lastShakeMagnitude = null;
+        tryEnableShakeDiceRoll();
+      }
+    });
     window.addEventListener("resize", () => {
       setBoardScale(currentBoardScale);
     });
