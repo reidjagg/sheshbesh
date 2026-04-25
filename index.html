@@ -438,7 +438,7 @@
           <div id="paletteMenuDropdown" class="board-palette-dropdown" role="listbox" hidden aria-label="Палитры"></div>
         </div>
       </div>
-      <button id="soundToggleBtn" type="button" aria-label="Переключить звук" title="Звук">🔊</button>
+      <button id="soundToggleBtn" type="button" aria-label="Переключить звук" title="Звук">Звук🔊</button>
     </div>
 
     <div class="actions actions--setup" aria-label="Расстановка и отмена">
@@ -863,6 +863,7 @@
     let isShakeMotionListening = false;
     let motionPermissionState = "unknown";
     let isSoundEnabled = true;
+    let isAudioUnlocked = false;
     const editHistory = [];
     const redoHistory = [];
     let diceSnapshot = { die1: "0", die2: "0", cube: "0" };
@@ -2438,6 +2439,9 @@
       if (!(audio instanceof HTMLAudioElement)) {
         return;
       }
+      if (!isAudioUnlocked) {
+        unlockAudioOnUserGesture();
+      }
       try {
         audio.currentTime = 0;
       } catch (_) {
@@ -2447,6 +2451,49 @@
       if (playPromise && typeof playPromise.catch === "function") {
         playPromise.catch(() => {});
       }
+    }
+
+    function unlockAudioOnUserGesture() {
+      if (isAudioUnlocked) {
+        return;
+      }
+      const tryUnlock = (audio) => {
+        if (!(audio instanceof HTMLAudioElement)) {
+          return Promise.resolve();
+        }
+        const prevMuted = audio.muted;
+        audio.muted = true;
+        try {
+          audio.currentTime = 0;
+        } catch (_) {
+          /* ignore */
+        }
+        const p = audio.play();
+        if (!p || typeof p.then !== "function") {
+          audio.pause();
+          audio.muted = prevMuted;
+          return Promise.resolve();
+        }
+        return p
+          .then(() => {
+            audio.pause();
+            try {
+              audio.currentTime = 0;
+            } catch (_) {
+              /* ignore */
+            }
+          })
+          .catch(() => {})
+          .finally(() => {
+            audio.muted = prevMuted;
+          });
+      };
+
+      Promise.all([tryUnlock(soundRoll), tryUnlock(soundCheck), tryUnlock(soundMove)])
+        .then(() => {
+          isAudioUnlocked = true;
+        })
+        .catch(() => {});
     }
 
     function syncSoundToggleButton() {
@@ -2636,6 +2683,7 @@
       setPaletteMenuOpen(paletteMenuDropdown.hidden);
     });
     soundToggleBtn.addEventListener("click", () => {
+      unlockAudioOnUserGesture();
       isSoundEnabled = !isSoundEnabled;
       syncSoundToggleButton();
       try {
@@ -2679,6 +2727,8 @@
       isDeleteDragging = false;
       stopDeleteHold();
     });
+    window.addEventListener("touchstart", unlockAudioOnUserGesture, { passive: true, once: true });
+    window.addEventListener("click", unlockAudioOnUserGesture, { once: true });
     window.addEventListener("touchstart", tryEnableShakeDiceRoll, { passive: true });
     window.addEventListener("click", tryEnableShakeDiceRoll);
     window.addEventListener("focus", tryEnableShakeDiceRoll);
