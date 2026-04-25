@@ -2464,6 +2464,18 @@
       startShakeDiceRollListening();
     }
 
+    function autoEnableShakeDiceRollOnLoad() {
+      if (typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
+        return;
+      }
+      // Browsers without explicit permission API (e.g. many Android browsers)
+      // can start motion listening immediately on page load.
+      if (typeof DeviceMotionEvent.requestPermission !== "function") {
+        motionPermissionState = "granted";
+        startShakeDiceRollListening();
+      }
+    }
+
     zoomOutBtn.addEventListener("click", () => {
       setBoardScale(currentBoardScale - 10);
     });
@@ -2582,6 +2594,7 @@
     createHitZones();
     syncPointLabelsVisibility();
     setBoardScale(getInitialBoardScale());
+    autoEnableShakeDiceRollOnLoad();
     applyMode("move");
     applyBoardFlip();
     renderBoard();
