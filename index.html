@@ -850,6 +850,12 @@
     let activeDeletePointIndex = null;
     let deleteHoldTimer = null;
     let currentBoardScale = 60;
+    let shouldAnimateDice = false;
+    let shouldAnimateDoublingCube = false;
+    let lastShakeMagnitude = null;
+    let lastShakeRollAt = 0;
+    let isShakeMotionListening = false;
+    let hasTriedMotionPermission = false;
     const editHistory = [];
     const redoHistory = [];
     let diceSnapshot = { die1: "0", die2: "0", cube: "0" };
@@ -1160,13 +1166,15 @@
       pointLabelsLayer.setAttribute("visibility", arePointLabelsVisible ? "visible" : "hidden");
     }
 
-    function drawDie(x, y, value) {
+    function drawDie(x, y, value, animateSpin = false) {
       const dieSize = 36.75;
       const cornerRadius = 3.675;
       const pipRadius = 3.675;
       const offsetSmall = dieSize * (7.6 / 35);
       const offsetMid = dieSize * 0.5;
       const offsetLarge = dieSize * (27.4 / 35);
+      const dieGroup = document.createElementNS(svgNs, "g");
+      dieGroup.setAttribute("style", "transform-box: fill-box; transform-origin: center;");
 
       const die = document.createElementNS(svgNs, "rect");
       die.setAttribute("x", String(x));
@@ -1178,7 +1186,7 @@
       die.setAttribute("fill", "#fff");
       die.setAttribute("stroke", "#ccc");
       die.setAttribute("stroke-width", "1");
-      extrasLayer.appendChild(die);
+      dieGroup.appendChild(die);
 
       const positions = {
         tl: [x + offsetSmall, y + offsetSmall],
@@ -1208,12 +1216,39 @@
         pip.setAttribute("cy", String(cy));
         pip.setAttribute("r", String(pipRadius));
         pip.setAttribute("fill", "#0d0d14");
-        extrasLayer.appendChild(pip);
+        dieGroup.appendChild(pip);
       });
+      extrasLayer.appendChild(dieGroup);
+      if (animateSpin) {
+        animateDoublingCubeSpin(dieGroup);
+      }
     }
 
-    function drawDoublingCube(value) {
+    function animateDoublingCubeSpin(cubeGroup) {
+      if (!(cubeGroup instanceof SVGElement) || typeof cubeGroup.animate !== "function") {
+        return;
+      }
+      cubeGroup.animate(
+        [
+          { transform: "rotate(0deg) scale(1)" },
+          { transform: "rotate(140deg) scale(0.95)", offset: 0.24 },
+          { transform: "rotate(300deg) scale(1.04)", offset: 0.58 },
+          { transform: "rotate(380deg) scale(0.98)", offset: 0.78 },
+          { transform: "rotate(352deg) scale(1.01)", offset: 0.9 },
+          { transform: "rotate(360deg) scale(1)" }
+        ],
+        {
+          duration: 760,
+          easing: "cubic-bezier(0.2, 0.95, 0.25, 1)",
+          fill: "none"
+        }
+      );
+    }
+
+    function drawDoublingCube(value, animateSpin = false) {
       const pal = getActivePalette();
+      const cubeGroup = document.createElementNS(svgNs, "g");
+      cubeGroup.setAttribute("style", "transform-box: fill-box; transform-origin: center;");
       const cube = document.createElementNS(svgNs, "rect");
       cube.setAttribute("x", "539.5");
       cube.setAttribute("y", "256.5");
@@ -1224,7 +1259,7 @@
       cube.setAttribute("fill", pal.cubeFill);
       cube.setAttribute("stroke", pal.cubeStroke);
       cube.setAttribute("stroke-width", "2");
-      extrasLayer.appendChild(cube);
+      cubeGroup.appendChild(cube);
 
       const text = document.createElementNS(svgNs, "text");
       text.setAttribute("x", "562");
@@ -1236,7 +1271,12 @@
       text.setAttribute("font-weight", "bold");
       text.textContent = String(value);
       applyTextFlipCompensation(text);
-      extrasLayer.appendChild(text);
+      cubeGroup.appendChild(text);
+      extrasLayer.appendChild(cubeGroup);
+
+      if (animateSpin) {
+        animateDoublingCubeSpin(cubeGroup);
+      }
     }
 
     function getPointTopCheckerAnchor(pointIndex) {
@@ -1464,11 +1504,27 @@
       diceSnapshot = getDiceFromInputs();
     }
 
-    function recordDiceCubeChangeIfNeeded() {
+    function recordDiceChangeIfNeeded() {
       const next = getDiceFromInputs();
-      if (next.die1 === diceSnapshot.die1 && next.die2 === diceSnapshot.die2 && next.cube === diceSnapshot.cube) {
+      if (next.die1 === diceSnapshot.die1 && next.die2 === diceSnapshot.die2) {
         return;
       }
+      shouldAnimateDice = true;
+      recordEditAction({
+        type: "diceCube",
+        prev: { ...diceSnapshot },
+        next: { ...next }
+      });
+      renderBoard();
+      syncDiceSnapshotFromInputs();
+    }
+
+    function recordDoublingCubeChangeIfNeeded() {
+      const next = getDiceFromInputs();
+      if (next.cube === diceSnapshot.cube) {
+        return;
+      }
+      shouldAnimateDoublingCube = true;
       recordEditAction({
         type: "diceCube",
         prev: { ...diceSnapshot },
@@ -1621,17 +1677,19 @@
       dieOneInput.value = String(dieOne);
       dieTwoInput.value = String(dieTwo);
       if (dieOne > 0) {
-        drawDie(689, 261, dieOne);
+        drawDie(689, 261, dieOne, shouldAnimateDice);
       }
       if (dieTwo > 0) {
-        drawDie(745, 261, dieTwo);
+        drawDie(745, 261, dieTwo, shouldAnimateDice);
       }
 
       const cubeValue = clampInt(cubeValueInput.value, 0, 64, 0);
       cubeValueInput.value = String(cubeValue);
       if (cubeValue > 0) {
-        drawDoublingCube(cubeValue);
+        drawDoublingCube(cubeValue, shouldAnimateDoublingCube);
       }
+      shouldAnimateDice = false;
+      shouldAnimateDoublingCube = false;
     }
 
     function editPoint(pointIndex) {
@@ -2327,23 +2385,7 @@
       }
     }
 
-    zoomOutBtn.addEventListener("click", () => {
-      setBoardScale(currentBoardScale - 10);
-    });
-    zoomInBtn.addEventListener("click", () => {
-      setBoardScale(currentBoardScale + 10);
-    });
-    togglePointLabelsBtn.addEventListener("click", () => {
-      arePointLabelsVisible = !arePointLabelsVisible;
-      syncPointLabelsVisibility();
-    });
-    dieOneInput.addEventListener("change", () => {
-      recordDiceCubeChangeIfNeeded();
-    });
-    dieTwoInput.addEventListener("change", () => {
-      recordDiceCubeChangeIfNeeded();
-    });
-    rollDiceBtn.addEventListener("click", () => {
+    function rollDiceRandomly() {
       const next = {
         die1: String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1)),
         die2: String(clampInt(Math.floor(Math.random() * 6) + 1, 1, 6, 1)),
@@ -2356,11 +2398,85 @@
       });
       dieOneInput.value = next.die1;
       dieTwoInput.value = next.die2;
+      shouldAnimateDice = true;
       renderBoard();
       syncDiceSnapshotFromInputs();
+    }
+
+    function handleDeviceMotionForDiceRoll(event) {
+      const acceleration = event.accelerationIncludingGravity || event.acceleration;
+      if (!acceleration) {
+        return;
+      }
+      const ax = Number(acceleration.x) || 0;
+      const ay = Number(acceleration.y) || 0;
+      const az = Number(acceleration.z) || 0;
+      const magnitude = Math.hypot(ax, ay, az);
+      if (lastShakeMagnitude === null) {
+        lastShakeMagnitude = magnitude;
+        return;
+      }
+
+      const delta = Math.abs(magnitude - lastShakeMagnitude);
+      lastShakeMagnitude = magnitude;
+
+      const shakeThreshold = 14;
+      const shakeCooldownMs = 1200;
+      const now = Date.now();
+      if (delta < shakeThreshold || (now - lastShakeRollAt) < shakeCooldownMs) {
+        return;
+      }
+      lastShakeRollAt = now;
+      rollDiceRandomly();
+    }
+
+    function startShakeDiceRollListening() {
+      if (isShakeMotionListening || typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
+        return;
+      }
+      window.addEventListener("devicemotion", handleDeviceMotionForDiceRoll, { passive: true });
+      isShakeMotionListening = true;
+    }
+
+    function tryEnableShakeDiceRoll() {
+      if (hasTriedMotionPermission || typeof window === "undefined" || typeof DeviceMotionEvent === "undefined") {
+        return;
+      }
+      hasTriedMotionPermission = true;
+      if (typeof DeviceMotionEvent.requestPermission === "function") {
+        DeviceMotionEvent.requestPermission()
+          .then((state) => {
+            if (state === "granted") {
+              startShakeDiceRollListening();
+            }
+          })
+          .catch(() => {});
+        return;
+      }
+      startShakeDiceRollListening();
+    }
+
+    zoomOutBtn.addEventListener("click", () => {
+      setBoardScale(currentBoardScale - 10);
+    });
+    zoomInBtn.addEventListener("click", () => {
+      setBoardScale(currentBoardScale + 10);
+    });
+    togglePointLabelsBtn.addEventListener("click", () => {
+      arePointLabelsVisible = !arePointLabelsVisible;
+      syncPointLabelsVisibility();
+    });
+    dieOneInput.addEventListener("change", () => {
+      recordDiceChangeIfNeeded();
+    });
+    dieTwoInput.addEventListener("change", () => {
+      recordDiceChangeIfNeeded();
+    });
+    rollDiceBtn.addEventListener("click", () => {
+      rollDiceRandomly();
     });
     cubeValueInput.addEventListener("change", () => {
-      recordDiceCubeChangeIfNeeded();
+      recordDoublingCubeChangeIfNeeded();
     });
     exportPngBtn.addEventListener("click", savePng);
     paletteMenuBtn.addEventListener("click", (event) => {
@@ -2402,6 +2518,8 @@
       isDeleteDragging = false;
       stopDeleteHold();
     });
+    window.addEventListener("touchstart", tryEnableShakeDiceRoll, { passive: true, once: true });
+    window.addEventListener("click", tryEnableShakeDiceRoll, { once: true });
     window.addEventListener("resize", () => {
       setBoardScale(currentBoardScale);
     });
@@ -2456,6 +2574,7 @@
     createHitZones();
     syncPointLabelsVisibility();
     setBoardScale(getInitialBoardScale());
+    tryEnableShakeDiceRoll();
     applyMode("move");
     applyBoardFlip();
     renderBoard();
