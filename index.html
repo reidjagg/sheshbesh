@@ -56,7 +56,8 @@
 
       .actions,
       .panel-modes,
-      .panel-dice {
+      .panel-dice,
+      .panel-board-size {
         width: 100%;
         max-width: 100%;
         border: none;
@@ -76,7 +77,8 @@
       }
 
       .panel-modes,
-      .panel-dice {
+      .panel-dice,
+      .panel-board-size {
         margin-top: 4px;
       }
 
@@ -183,6 +185,44 @@
       font-family: var(--panel-font);
       font-size: var(--panel-font-size);
       line-height: var(--panel-line-height);
+    }
+
+    .panel-board-size {
+      margin-top: 6px;
+      display: grid;
+      gap: 4px;
+      padding: 6px 8px;
+      border: 1px solid var(--ui-border);
+      border-radius: 8px;
+      background: var(--ui-surface);
+      color: var(--ui-text);
+      user-select: none;
+      font-family: var(--panel-font);
+      font-size: var(--panel-font-size);
+      line-height: var(--panel-line-height);
+      width: min(671px, 100%);
+      box-sizing: border-box;
+    }
+
+    .panel-board-size label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .panel-board-size input[type="range"] {
+      flex: 1;
+      min-width: 140px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .panel-board-size-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
     }
 
     .row {
@@ -415,6 +455,23 @@
   </style>
 </head>
 <body>
+  <div class="panel-board-size" aria-label="Размер игрового поля">
+    <label>
+      <span>Высота поля</span>
+      <input id="fieldHeightSlider" type="range" min="0" max="220" step="1" value="0" />
+      <span id="fieldHeightValue" class="value-chip">100%</span>
+    </label>
+    <label>
+      <span>Размер кубиков</span>
+      <input id="diceSizeSlider" type="range" min="30" max="72" step="1" value="45" />
+      <span id="diceSizeValue" class="value-chip">45px</span>
+    </label>
+    <div class="panel-board-size-stats">
+      <span id="fieldHeightPxValue" class="value-chip">Высота поля: 624px</span>
+      <span id="fieldSpaceWidthValue" class="value-chip">Ширина поля: 589.6px</span>
+    </div>
+  </div>
+
   <div class="actions actions--toolbar" aria-label="Экспорт и вид доски">
       <button id="exportPngBtn" type="button">💾</button>
       <button id="flipBoardBtn" type="button">🔄</button>
@@ -448,12 +505,22 @@
       <button id="backBtn" class="mode-btn" type="button">Вернуть↩️</button>
     </div>
 
+    <div class="panel-modes" aria-label="Режимы редактирования">
+      <div class="row">
+        <button id="modeMoveBtn" class="mode-btn active" type="button" data-mode="move">Ход 🖐️</button>
+        <button id="modeLinesBtn" class="mode-btn" type="button" data-mode="lines">◀︎━▶︎</button>
+        <button id="modeWhiteBtn" class="mode-btn" type="button" data-mode="white">++ <span class="checker-icon checker-icon--white"></span></button>
+        <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">++ <span class="checker-icon checker-icon--black"></span></button>
+        <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Стереть🧽</button>
+      </div>
+    </div>
+
     <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="226.417 0 671.167 669" width="671.167" height="669" role="img" aria-label="Игровая доска">
       <g id="boardContent">
         <defs id="arrowDefs"></defs>
-        <rect x="226.417" y="0" width="671.167" height="669" rx="20" ry="20" data-board="frame" fill="#423122" stroke="#000" stroke-width="1"/>
-        <rect x="250" y="22" width="283" height="624" data-board="field" fill="#4a6439"/>
-        <rect x="591" y="22" width="283" height="624" data-board="field" fill="#4a6439"/>
+        <rect x="243.625" y="0" width="636.751" height="669" rx="20" ry="20" data-board="frame" fill="#423122" stroke="#000" stroke-width="1"/>
+        <rect x="267.208" y="22" width="283" height="624" data-board="field" fill="#4a6439"/>
+        <rect x="573.792" y="22" width="283" height="624" data-board="field" fill="#4a6439"/>
 
         <g id="boardTriangleFields">
         <path data-tri="a" d="M250 22 L272.583 208.667 A2 7.915 0 0 0 274.583 208.667 L297.167 22z" fill="#c9b797"/>
@@ -507,16 +574,6 @@
         <g id="arrowHitLayer" pointer-events="none"></g>
       </g>
     </svg>
-
-    <div class="panel-modes" aria-label="Режимы редактирования">
-      <div class="row">
-        <button id="modeMoveBtn" class="mode-btn active" type="button" data-mode="move">Ход 🖐️</button>
-        <button id="modeLinesBtn" class="mode-btn" type="button" data-mode="lines">◀︎━▶︎</button>
-        <button id="modeWhiteBtn" class="mode-btn" type="button" data-mode="white">++ <span class="checker-icon checker-icon--white"></span></button>
-        <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">++ <span class="checker-icon checker-icon--black"></span></button>
-        <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Стереть🧽</button>
-      </div>
-    </div>
 
     <div class="panel-dice" aria-label="Куб удвоения и кости">
       <div class="row">
@@ -815,6 +872,12 @@
 
     const zoomOutBtn = document.getElementById("zoomOutBtn");
     const zoomInBtn = document.getElementById("zoomInBtn");
+    const fieldHeightSlider = document.getElementById("fieldHeightSlider");
+    const fieldHeightValue = document.getElementById("fieldHeightValue");
+    const fieldHeightPxValue = document.getElementById("fieldHeightPxValue");
+    const fieldSpaceWidthValue = document.getElementById("fieldSpaceWidthValue");
+    const diceSizeSlider = document.getElementById("diceSizeSlider");
+    const diceSizeValue = document.getElementById("diceSizeValue");
     const exportPngBtn = document.getElementById("exportPngBtn");
     const flipBoardBtn = document.getElementById("flipBoardBtn");
     const backBtn = document.getElementById("backBtn");
@@ -886,6 +949,16 @@
     const defaultStep = radius * 2 + 1;
     const maxTowerSpan = defaultStep * 4;
     const cellWidth = 47.167;
+    const innerBoardLeftX = 250;
+    const innerBoardRightX = 874;
+    const baseFieldRectWidth = 283;
+    const baseCenterGapWidth = 58;
+    const boardBarGapWidth = cellWidth / 2;
+    const boardCenterShift = (baseCenterGapWidth - boardBarGapWidth) / 2;
+    const leftFieldRectX = innerBoardLeftX + boardCenterShift;
+    const rightFieldRectX = 591 - boardCenterShift;
+    const frameX = 226.417 + boardCenterShift;
+    const frameWidth = 671.167 - boardCenterShift * 2;
     const arrowStartWidth = cellWidth;
     const arrowEndWidth = cellWidth * 0.1;
     let isBoardFlipped = false;
@@ -934,23 +1007,84 @@
     };
     const barX = 562;
     const barTopY = 115.333;
-    const barBottomY = 552.667;
+    const baseBarBottomY = 552.667;
+    let barBottomY = baseBarBottomY;
 
-    const leftXs = [273.583, 320.75, 367.917, 415.083, 462.25, 509.417];
-    const rightXs = [614.583, 661.75, 708.917, 756.083, 803.25, 850.417];
+    const leftXs = [273.583, 320.75, 367.917, 415.083, 462.25, 509.417]
+      .map((x) => x + boardCenterShift);
+    const rightXs = [614.583, 661.75, 708.917, 756.083, 803.25, 850.417]
+      .map((x) => x - boardCenterShift);
     const topStartY = 45.583;
-    const bottomStartY = 622.417;
+    const baseBottomStartY = 622.417;
     const pointLabelTopY = "11.5";
-    const pointLabelBottomY = "657.5";
+    const basePointLabelBottomY = 657.5;
+    let pointLabelBottomY = String(basePointLabelBottomY);
+    const baseFieldTopY = 22;
+    const baseFieldHeight = 624;
+    const baseBoardHeight = 669;
+    const defaultDiceSize = 45;
+    const minDiceSize = 30;
+    const maxDiceSize = 72;
+    const checkerDiameter = radius * 2;
+    const baseDiceY = 311.5;
+    const baseDoublingCubeY = 311.5;
+    const baseDicePairCenterX = rightFieldRectX + baseFieldRectWidth / 2;
+    const doublingCubeCenterX = leftFieldRectX + baseFieldRectWidth + boardBarGapWidth / 2;
+    const initialFieldHeight = rightFieldRectX + baseFieldRectWidth - leftFieldRectX;
+    const initialFieldHeightOffset = Math.round(baseFieldHeight - initialFieldHeight);
+    let boardFieldHeightOffset = initialFieldHeightOffset;
+    let currentDiceSize = defaultDiceSize;
 
     const pointDefs = [
       ...[...rightXs].reverse().map((x) => ({ x, startY: topStartY, direction: 1 })),
       ...[...leftXs].reverse().map((x) => ({ x, startY: topStartY, direction: 1 })),
-      ...leftXs.map((x) => ({ x, startY: bottomStartY, direction: -1 })),
-      ...rightXs.map((x) => ({ x, startY: bottomStartY, direction: -1 }))
+      ...leftXs.map((x) => ({ x, startY: baseBottomStartY, direction: -1 })),
+      ...rightXs.map((x) => ({ x, startY: baseBottomStartY, direction: -1 }))
     ];
+    const boardFrameRect = boardContent.querySelector('[data-board="frame"]');
+    const boardFieldRects = Array.from(boardContent.querySelectorAll('[data-board="field"]'));
+    const sideTrianglePaths = boardTriangleFields
+      ? Array.from(boardTriangleFields.querySelectorAll("path[data-tri]"))
+      : [];
+    const bottomTrianglePaths = boardTriangleFields
+      ? Array.from(boardTriangleFields.querySelectorAll("path[data-tri]"))
+        .filter((el) => (el.getAttribute("d") || "").includes("646"))
+      : [];
+    const bottomCornerPaths = Array.from(boardContent.querySelectorAll('[data-board="corner"]'))
+      .filter((el) => (el.getAttribute("d") || "").includes("646"));
+    const innerCornerPaths = Array.from(boardContent.querySelectorAll('[data-board="corner"]'))
+      .filter((el) => {
+        const d = el.getAttribute("d") || "";
+        return d.includes("533.") || d.includes("529 ") || d.includes("590.") || d.includes("595 ");
+      });
 
     const pointStacks = Array.from({ length: 24 }, () => []);
+
+    function getPathStartX(pathNode) {
+      const d = pathNode.getAttribute("d") || "";
+      const m = d.match(/^M\s*([0-9.]+)/);
+      if (!m) {
+        return NaN;
+      }
+      return Number.parseFloat(m[1]);
+    }
+
+    function getSideHorizontalShift(pathNode) {
+      const startX = getPathStartX(pathNode);
+      if (!Number.isFinite(startX)) {
+        return 0;
+      }
+      return startX < barX ? boardCenterShift : -boardCenterShift;
+    }
+
+    function applyCenterGapLayout() {
+      sideTrianglePaths.forEach((path) => {
+        path.setAttribute("transform", `translate(${getSideHorizontalShift(path)} 0)`);
+      });
+      innerCornerPaths.forEach((path) => {
+        path.setAttribute("transform", `translate(${getSideHorizontalShift(path)} 0)`);
+      });
+    }
 
     function cursorSvg(color, stroke, glyph = "") {
       const text = glyph ? `<text x='12' y='14' font-size='12'>${glyph}</text>` : "";
@@ -1203,7 +1337,8 @@
           spin.setAttribute("repeatCount", "indefinite");
           circle.appendChild(spin);
         }
-        getCheckerSvgLayerForPointId(`bar-${section}`).appendChild(circle);
+        // Bar checkers must always stay above regular towers.
+        checkersOverArrowsLayer.appendChild(circle);
         if (count > 1) {
           addCountLabel(barX, y, count, style.textColor);
         }
@@ -1232,9 +1367,9 @@
       pointLabelsLayer.setAttribute("visibility", "visible");
     }
 
-    function drawDie(x, y, value, animateSpin = false, animationDelayMs = 0) {
-      const dieSize = 45;
-      const cornerRadius = 4;
+    function drawDie(x, y, size, value, animateSpin = false, animationDelayMs = 0) {
+      const dieSize = size;
+      const cornerRadius = Math.max(3, dieSize * 0.09);
       const pipRadius = dieSize * 0.1;
       const offsetSmall = dieSize * (7.6 / 35);
       const offsetMid = dieSize * 0.5;
@@ -1338,29 +1473,29 @@
       );
     }
 
-    function drawDoublingCube(value, animateSpin = false) {
+    function drawDoublingCube(value, x, y, size, animateSpin = false) {
       const pal = getActivePalette();
       const cubeGroup = document.createElementNS(svgNs, "g");
       cubeGroup.setAttribute("style", "transform-box: fill-box; transform-origin: center;");
       const cube = document.createElementNS(svgNs, "rect");
-      cube.setAttribute("x", "539.5");
-      cube.setAttribute("y", "311.5");
-      cube.setAttribute("width", "45");
-      cube.setAttribute("height", "45");
-      cube.setAttribute("rx", "4");
-      cube.setAttribute("ry", "4");
+      cube.setAttribute("x", String(x));
+      cube.setAttribute("y", String(y));
+      cube.setAttribute("width", String(size));
+      cube.setAttribute("height", String(size));
+      cube.setAttribute("rx", String(Math.max(3, size * 0.09)));
+      cube.setAttribute("ry", String(Math.max(3, size * 0.09)));
       cube.setAttribute("fill", pal.cubeFill);
-      cube.setAttribute("stroke", pal.cubeStroke);
-      cube.setAttribute("stroke-width", "2");
+      cube.setAttribute("stroke", pal.frame);
+      cube.setAttribute("stroke-width", "4");
       cubeGroup.appendChild(cube);
 
       const text = document.createElementNS(svgNs, "text");
-      text.setAttribute("x", "562");
-      text.setAttribute("y", "334");
+      text.setAttribute("x", String(x + size / 2));
+      text.setAttribute("y", String(y + size / 2));
       text.setAttribute("dy", "5");
       text.setAttribute("text-anchor", "middle");
       text.setAttribute("fill", pal.cubeText);
-      text.setAttribute("font-size", "20");
+      text.setAttribute("font-size", String(Math.max(14, Math.round(size * 0.44))));
       text.setAttribute("font-weight", "bold");
       text.textContent = String(value);
       applyTextFlipCompensation(text);
@@ -1382,6 +1517,10 @@
       return { x: point.x, y: checkerTopY };
     }
 
+    function getCurrentFieldBottomY() {
+      return baseFieldTopY + (baseFieldHeight - boardFieldHeightOffset);
+    }
+
     function getAnchorForArrow(targetId, isEndAnchor = false) {
       if (targetId === "bar-top" || targetId === "bar-bottom") {
         const stack = barStacks[targetId === "bar-top" ? "top" : "bottom"];
@@ -1398,7 +1537,7 @@
 
       const pointIndex = Number(targetId);
       if (!Number.isInteger(pointIndex) || pointIndex < 0 || pointIndex >= pointDefs.length) {
-        return { x: barX, y: 279 };
+        return { x: barX, y: baseFieldTopY + (baseFieldHeight - boardFieldHeightOffset) / 2 };
       }
       const point = pointDefs[pointIndex];
       const stack = pointStacks[pointIndex];
@@ -1414,11 +1553,13 @@
       }
       // For empty points, end anchor sits slightly above triangle edge.
       const emptyEndOffset = cellWidth * 0.1;
+      const fieldTopY = baseFieldTopY;
+      const fieldBottomY = getCurrentFieldBottomY();
       return {
         x: point.x,
         y: point.direction === 1
-          ? (isEndAnchor ? 22 + emptyEndOffset : 22)
-          : (isEndAnchor ? 646 - emptyEndOffset : 646)
+          ? (isEndAnchor ? fieldTopY + emptyEndOffset : fieldTopY)
+          : (isEndAnchor ? fieldBottomY - emptyEndOffset : fieldBottomY)
       };
     }
 
@@ -1431,7 +1572,7 @@
       const midX = (from.x + to.x) / 2;
       const midY = (from.y + to.y) / 2;
       const centerX = 562;
-      const centerY = 279;
+      const centerY = baseFieldTopY + (baseFieldHeight - boardFieldHeightOffset) / 2;
       const towardCenterLineY = centerY - midY;
       const horizontalSpan = Math.abs(dx);
       const curve = Math.min(320, Math.max(90, distance * 0.74));
@@ -1783,21 +1924,31 @@
       drawArrows();
       drawLineStartMarker();
 
+      const dieSize = currentDiceSize;
+      const currentFieldHeight = baseFieldHeight - boardFieldHeightOffset;
+      const fieldMiddleY = baseFieldTopY + currentFieldHeight / 2;
+      const diceY = fieldMiddleY - dieSize / 2;
+      const doublingCubeY = fieldMiddleY - dieSize / 2;
+      const diceGap = dieSize / 2;
+      const dicePairWidth = dieSize * 2 + diceGap;
+      const dieOneX = baseDicePairCenterX - dicePairWidth / 2;
+      const dieTwoX = dieOneX + dieSize + diceGap;
+      const doublingCubeX = doublingCubeCenterX - dieSize / 2;
       const dieOne = clampInt(dieOneInput.value, 0, 6, 0);
       const dieTwo = clampInt(dieTwoInput.value, 0, 6, 0);
       dieOneInput.value = String(dieOne);
       dieTwoInput.value = String(dieTwo);
       if (!isDiceRollTransition && dieOne > 0) {
-        drawDie(676.25, 311.5, dieOne, shouldAnimateDice, 0);
+        drawDie(dieOneX, diceY, dieSize, dieOne, shouldAnimateDice, 0);
       }
       if (!isDiceRollTransition && dieTwo > 0) {
-        drawDie(743.75, 311.5, dieTwo, shouldAnimateDice, 70);
+        drawDie(dieTwoX, diceY, dieSize, dieTwo, shouldAnimateDice, 70);
       }
 
       const cubeValue = clampInt(cubeValueInput.value, 0, 64, 0);
       cubeValueInput.value = String(cubeValue);
       if (cubeValue > 0) {
-        drawDoublingCube(cubeValue, shouldAnimateDoublingCube);
+        drawDoublingCube(cubeValue, doublingCubeX, doublingCubeY, dieSize, shouldAnimateDoublingCube);
       }
       shouldAnimateDice = false;
       shouldAnimateDoublingCube = false;
@@ -2248,12 +2399,16 @@
 
     function createHitZones() {
       hitZonesLayer.replaceChildren();
-      const rectWidth = 47.167;
-      const rectHeight = 624 / 2;
+      const rectWidth = cellWidth;
+      const barRectWidth = boardBarGapWidth;
+      const currentFieldHeight = baseFieldHeight - boardFieldHeightOffset;
+      const rectHeight = currentFieldHeight / 2;
       const hitZoneCornerRadius = 6;
       const zoneLeftOffset = rectWidth / 2;
-      const topZoneY = 22;
-      const bottomZoneY = 646 - rectHeight;
+      const barZoneLeftOffset = barRectWidth / 2;
+      const topZoneY = baseFieldTopY;
+      const bottomBoundY = baseFieldTopY + currentFieldHeight;
+      const bottomZoneY = bottomBoundY - rectHeight;
 
       pointDefs.forEach((point, pointIndex) => {
         const rect = document.createElementNS(svgNs, "rect");
@@ -2313,9 +2468,9 @@
       });
 
       const barTopRect = document.createElementNS(svgNs, "rect");
-      barTopRect.setAttribute("x", String(barX - zoneLeftOffset));
+      barTopRect.setAttribute("x", String(barX - barZoneLeftOffset));
       barTopRect.setAttribute("y", String(topZoneY));
-      barTopRect.setAttribute("width", String(rectWidth));
+      barTopRect.setAttribute("width", String(barRectWidth));
       barTopRect.setAttribute("height", String(rectHeight));
       barTopRect.setAttribute("rx", String(hitZoneCornerRadius));
       barTopRect.setAttribute("ry", String(hitZoneCornerRadius));
@@ -2348,9 +2503,9 @@
       hitZonesLayer.appendChild(barTopRect);
 
       const barBottomRect = document.createElementNS(svgNs, "rect");
-      barBottomRect.setAttribute("x", String(barX - zoneLeftOffset));
+      barBottomRect.setAttribute("x", String(barX - barZoneLeftOffset));
       barBottomRect.setAttribute("y", String(bottomZoneY));
-      barBottomRect.setAttribute("width", String(rectWidth));
+      barBottomRect.setAttribute("width", String(barRectWidth));
       barBottomRect.setAttribute("height", String(rectHeight));
       barBottomRect.setAttribute("rx", String(hitZoneCornerRadius));
       barBottomRect.setAttribute("ry", String(hitZoneCornerRadius));
@@ -2381,6 +2536,96 @@
         event.preventDefault();
       });
       hitZonesLayer.appendChild(barBottomRect);
+    }
+
+    function syncFieldHeightValue() {
+      if (!fieldHeightValue) {
+        return;
+      }
+      const currentFieldHeight = baseFieldHeight - boardFieldHeightOffset;
+      const remainingRatio = Math.round((currentFieldHeight / initialFieldHeight) * 100);
+      fieldHeightValue.textContent = `${remainingRatio}%`;
+    }
+
+    function syncBoardGeometryStats() {
+      const currentFieldHeight = baseFieldHeight - boardFieldHeightOffset;
+      const gameWidth = rightFieldRectX + baseFieldRectWidth - leftFieldRectX;
+      if (fieldHeightPxValue) {
+        fieldHeightPxValue.textContent = `Высота поля: ${Math.round(currentFieldHeight)}px`;
+      }
+      if (fieldSpaceWidthValue) {
+        fieldSpaceWidthValue.textContent = `Ширина поля: ${gameWidth.toFixed(1)}px`;
+      }
+    }
+
+    function syncDiceSizeValue() {
+      if (!diceSizeValue) {
+        return;
+      }
+      diceSizeValue.textContent = `${Math.round(currentDiceSize)}px`;
+    }
+
+    function getMinimumAllowedFieldHeight() {
+      const tenCheckersHeight = checkerDiameter * 10;
+      const minHeightByRule = tenCheckersHeight + currentDiceSize;
+      return Math.min(baseFieldHeight, Math.ceil(minHeightByRule));
+    }
+
+    function getMaxFieldHeightOffset() {
+      return Math.max(0, baseFieldHeight - getMinimumAllowedFieldHeight());
+    }
+
+    function getFieldHeightOffsetBounds() {
+      const maxOffset = getMaxFieldHeightOffset();
+      const minOffset = Math.min(initialFieldHeightOffset, maxOffset);
+      return { minOffset, maxOffset };
+    }
+
+    function applyBoardFieldHeight(offsetRaw) {
+      const { minOffset, maxOffset } = getFieldHeightOffsetBounds();
+      const offset = clampInt(offsetRaw, minOffset, maxOffset, minOffset);
+      boardFieldHeightOffset = offset;
+      if (fieldHeightSlider) {
+        fieldHeightSlider.value = String(offset);
+      }
+      const currentFieldHeight = baseFieldHeight - offset;
+      const currentBoardHeight = baseBoardHeight - offset;
+      const bottomShift = offset;
+      boardFieldRects.forEach((rect) => {
+        const isLeftField = Number.parseFloat(rect.getAttribute("x") || "0") < barX;
+        rect.setAttribute("x", String(isLeftField ? leftFieldRectX : rightFieldRectX));
+        rect.setAttribute("width", String(baseFieldRectWidth));
+        rect.setAttribute("y", String(baseFieldTopY));
+        rect.setAttribute("height", String(currentFieldHeight));
+      });
+      if (boardFrameRect) {
+        boardFrameRect.setAttribute("x", String(frameX));
+        boardFrameRect.setAttribute("width", String(frameWidth));
+        boardFrameRect.setAttribute("height", String(currentBoardHeight));
+      }
+      bottomTrianglePaths.forEach((path) => {
+        const hShift = getSideHorizontalShift(path);
+        path.setAttribute("transform", `translate(${hShift} ${-bottomShift})`);
+      });
+      bottomCornerPaths.forEach((path) => {
+        const hShift = getSideHorizontalShift(path);
+        path.setAttribute("transform", `translate(${hShift} ${-bottomShift})`);
+      });
+
+      for (let i = 12; i < pointDefs.length; i += 1) {
+        pointDefs[i].startY = baseBottomStartY - bottomShift;
+      }
+      barBottomY = baseBarBottomY - bottomShift;
+      pointLabelBottomY = String(basePointLabelBottomY - bottomShift);
+
+      boardSvg.setAttribute("viewBox", `226.417 0 671.167 ${currentBoardHeight}`);
+      boardSvg.setAttribute("height", String(currentBoardHeight));
+      createPointLabels();
+      createHitZones();
+      applyBoardFlip();
+      renderBoard();
+      syncFieldHeightValue();
+      syncBoardGeometryStats();
     }
 
     function setBoardScale(scaleValue) {
@@ -2936,6 +3181,37 @@
     zoomInBtn.addEventListener("click", () => {
       setBoardScale(currentBoardScale + 10);
     });
+    if (fieldHeightSlider) {
+      const { minOffset, maxOffset } = getFieldHeightOffsetBounds();
+      fieldHeightSlider.min = String(minOffset);
+      fieldHeightSlider.max = String(maxOffset);
+      fieldHeightSlider.value = String(boardFieldHeightOffset);
+      fieldHeightSlider.addEventListener("input", () => {
+        applyBoardFieldHeight(fieldHeightSlider.value);
+      });
+    }
+    if (diceSizeSlider) {
+      diceSizeSlider.addEventListener("input", () => {
+        const nextSize = clampInt(diceSizeSlider.value, minDiceSize, maxDiceSize, defaultDiceSize);
+        currentDiceSize = nextSize;
+        diceSizeSlider.value = String(nextSize);
+        syncDiceSizeValue();
+        const { minOffset, maxOffset } = getFieldHeightOffsetBounds();
+        if (fieldHeightSlider) {
+          fieldHeightSlider.min = String(minOffset);
+          fieldHeightSlider.max = String(maxOffset);
+        }
+        if (boardFieldHeightOffset > maxOffset) {
+          applyBoardFieldHeight(maxOffset);
+          return;
+        }
+        if (boardFieldHeightOffset < minOffset) {
+          applyBoardFieldHeight(minOffset);
+          return;
+        }
+        renderBoard();
+      });
+    }
     dieOneInput.addEventListener("change", () => {
       playSound(soundRoll);
       recordDiceChangeIfNeeded();
@@ -3087,9 +3363,18 @@
 
     initBoardPaletteFromStorage();
     initSoundFromStorage();
+    applyCenterGapLayout();
     createPointLabels();
     createHitZones();
     syncPointLabelsVisibility();
+    if (diceSizeSlider) {
+      currentDiceSize = clampInt(diceSizeSlider.value, minDiceSize, maxDiceSize, defaultDiceSize);
+      diceSizeSlider.value = String(currentDiceSize);
+    }
+    applyBoardFieldHeight(boardFieldHeightOffset);
+    syncDiceSizeValue();
+    syncFieldHeightValue();
+    syncBoardGeometryStats();
     setBoardScale(getInitialBoardScale());
     applyMode("move");
     applyBoardFlip();
