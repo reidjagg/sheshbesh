@@ -515,7 +515,7 @@
       </div>
     </div>
 
-    <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="226.417 0 671.167 669" width="671.167" height="669" role="img" aria-label="Игровая доска">
+    <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="243.625 0 636.751 669" width="636.751" height="669" role="img" aria-label="Игровая доска">
       <g id="boardContent">
         <defs id="arrowDefs"></defs>
         <rect x="243.625" y="0" width="636.751" height="669" rx="20" ry="20" data-board="frame" fill="#423122" stroke="#000" stroke-width="1"/>
@@ -2618,7 +2618,7 @@
       barBottomY = baseBarBottomY - bottomShift;
       pointLabelBottomY = String(basePointLabelBottomY - bottomShift);
 
-      boardSvg.setAttribute("viewBox", `226.417 0 671.167 ${currentBoardHeight}`);
+      boardSvg.setAttribute("viewBox", `${frameX} 0 ${frameWidth} ${currentBoardHeight}`);
       boardSvg.setAttribute("height", String(currentBoardHeight));
       createPointLabels();
       createHitZones();
