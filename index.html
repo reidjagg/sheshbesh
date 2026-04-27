@@ -31,7 +31,6 @@
       --panel-font: Arial, Helvetica, sans-serif;
       --panel-font-size: 14px;
       --panel-line-height: 1.35;
-      --board-panel-width: 671.167px;
     }
 
     body {
@@ -59,13 +58,14 @@
       .panel-modes,
       .panel-dice,
       .panel-board-size {
-        width: 100%;
-        max-width: 100%;
+        width: auto;
+        max-width: none;
         border: none;
         border-radius: 0;
         box-sizing: border-box;
         padding-left: 0;
         padding-right: 0;
+        align-self: center;
       }
 
       .actions--toolbar,
@@ -99,7 +99,7 @@
     .panel-modes,
     .panel-dice,
     .panel-board-size {
-      width: min(var(--board-panel-width), 100%);
+      width: auto;
       box-sizing: border-box;
     }
 
@@ -213,7 +213,7 @@
       font-family: var(--panel-font);
       font-size: var(--panel-font-size);
       line-height: var(--panel-line-height);
-      width: min(var(--board-panel-width), 100%);
+      width: auto;
       box-sizing: border-box;
     }
 
@@ -514,6 +514,8 @@
       height: 36px;
       padding: 0;
       justify-content: center;
+      border-color: var(--ui-btn-border);
+      background: var(--ui-btn);
     }
 
     .board-palette-trigger {
@@ -522,12 +524,22 @@
       height: 100%;
       margin: 0;
       padding: 0;
-      border: 1px solid var(--ui-input-border);
+      border: 1px solid var(--ui-btn-border);
       border-radius: 6px;
-      background: var(--ui-chip-inner);
+      background: var(--ui-btn);
       cursor: pointer;
       position: relative;
       box-sizing: border-box;
+    }
+
+    .board-palette-trigger:hover {
+      background: var(--ui-btn-hover);
+    }
+
+    .board-palette-chip:has(.board-palette-trigger[aria-expanded="true"]) {
+      border-color: var(--ui-active-border);
+      box-shadow: inset 0 0 0 1px var(--ui-active-border);
+      background: var(--ui-active);
     }
 
     .board-palette-trigger:focus-visible {
@@ -549,9 +561,11 @@
       top: calc(100% + 4px);
       right: 0;
       left: auto;
+      width: 48px;
       z-index: 1000;
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 4px;
       padding: 4px;
       margin: 0;
@@ -569,12 +583,12 @@
 
     .board-palette-option {
       display: block;
-      width: 22px;
-      height: 22px;
+      width: 32px;
+      height: 24px;
       margin: 0;
       padding: 0;
       border: 1px solid transparent;
-      border-radius: 4px;
+      border-radius: 2px;
       cursor: pointer;
       box-sizing: border-box;
       background-clip: padding-box;
@@ -2836,7 +2850,6 @@
       const safeValue = Math.max(20, Math.min(getMaxScreenScale(), scaleValue));
       const width = (baseBoardWidth * safeValue) / 100;
       boardSvg.style.width = `${width}px`;
-      document.documentElement.style.setProperty("--board-panel-width", `${width}px`);
       currentBoardScale = safeValue;
     }
 
