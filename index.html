@@ -58,14 +58,23 @@
       .panel-modes,
       .panel-dice,
       .panel-board-size {
-        width: 100%;
-        max-width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
         border: none;
         border-radius: 0;
         box-sizing: border-box;
         padding-left: 0;
         padding-right: 0;
-        align-self: stretch;
+        align-self: stretch !important;
+      }
+
+      .actions button,
+      .panel-modes .mode-btn,
+      .panel-dice .mode-btn,
+      .board-palette-chip {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
       }
 
       .actions--toolbar,
