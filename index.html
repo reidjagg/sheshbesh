@@ -31,6 +31,8 @@
       --panel-font: Arial, Helvetica, sans-serif;
       --panel-font-size: 14px;
       --panel-line-height: 1.35;
+      --ui-button-width: 48px;
+      --ui-button-height: 36px;
     }
 
     body {
@@ -78,7 +80,7 @@
       }
 
       .board-palette-chip {
-        height: 36px;
+        height: var(--ui-button-height);
       }
 
       .board-palette-wrap {
@@ -167,8 +169,8 @@
 
     .actions button {
       padding: 8px 12px;
-      height: 36px;
-      min-height: 36px;
+      height: var(--ui-button-height);
+      min-height: var(--ui-button-height);
       border: 1px solid var(--ui-btn-border);
       border-radius: 6px;
       background: var(--ui-btn);
@@ -203,8 +205,8 @@
     }
 
     .ui-icon-btn {
-      width: 48px;
-      height: 36px;
+      width: var(--ui-button-width);
+      height: var(--ui-button-height);
       padding: 0;
       display: inline-flex;
       align-items: center;
@@ -276,8 +278,8 @@
       align-items: center;
       gap: 4px;
       padding: 8px 10px;
-      height: 36px;
-      min-height: 36px;
+      height: var(--ui-button-height);
+      min-height: var(--ui-button-height);
       border: 1px solid var(--ui-btn-border);
       border-radius: 6px;
       background: var(--ui-btn);
@@ -518,7 +520,7 @@
     }
 
     .control-like {
-      height: 34px;
+      height: var(--ui-button-height);
       padding: 6px 10px;
       border: 1px solid var(--ui-input-border);
       border-radius: 6px;
@@ -541,7 +543,9 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 4px 8px;
+      height: var(--ui-button-height);
+      min-height: var(--ui-button-height);
+      padding: 0 8px;
       border: 1px solid var(--ui-border);
       border-radius: 6px;
       background: var(--ui-surface-2);
@@ -552,7 +556,7 @@
     }
 
     .value-chip .control-like {
-      height: 28px;
+      height: calc(var(--ui-button-height) - 2px);
       min-width: 58px;
       padding: 4px 4px;
       border: 1px solid var(--ui-input-border);
@@ -572,12 +576,41 @@
     }
 
     .board-palette-chip {
-      width: 48px;
-      height: 36px;
+      width: var(--ui-button-width);
+      height: var(--ui-button-height);
       padding: 0;
       justify-content: center;
       border-color: var(--ui-btn-border);
       background: var(--ui-btn);
+    }
+
+    .value-chip--w2 {
+      width: calc(var(--ui-button-width) * 2 + 4px);
+      min-height: var(--ui-button-height);
+    }
+
+    .value-chip--w4 {
+      width: calc(var(--ui-button-width) * 4 + 12px);
+      min-height: var(--ui-button-height);
+    }
+
+    .value-chip--rules span {
+      white-space: nowrap;
+    }
+
+    .value-chip--rules .control-like {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .value-chip--cube .control-like {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .value-chip--dice .control-like {
+      flex: 1 1 0;
+      min-width: 0;
     }
 
     .board-palette-trigger {
@@ -730,8 +763,14 @@
 
     <div class="actions actions--setup" aria-label="Расстановка и отмена">
       <button id="clearBtn" class="ui-icon-btn" type="button">💣</button>
-      <button id="setupLongBtn" type="button">Длинные⚡</button>
-      <button id="setupShortBtn" type="button">Короткие⚡</button>
+      <label class="value-chip value-chip--w4 value-chip--rules" for="rulesSelect">
+        <span>Правила</span>
+        <select id="rulesSelect" class="control-like" aria-label="Выбор правил">
+          <option value="short" selected>Короткие</option>
+          <option value="long">Длинные</option>
+        </select>
+      </label>
+      <button id="applyRulesSetupBtn" class="ui-icon-btn" type="button" aria-label="Поставить начальную позицию" title="Поставить начальную позицию">♟️</button>
     </div>
 
     <div class="panel-modes" aria-label="Режимы редактирования">
@@ -824,7 +863,7 @@
 
     <div class="panel-dice" aria-label="Куб удвоения и кости">
       <div class="row">
-        <label class="value-chip">
+        <label class="value-chip value-chip--w2 value-chip--cube">
           <svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
             <rect class="cube-x2-icon-box" x="0.5" y="0.5" width="15" height="15" />
             <text class="cube-x2-icon-text" x="8" y="8">x2</text>
@@ -840,7 +879,7 @@
             <option value="64">64</option>
           </select>
         </label>
-        <label class="value-chip">
+        <label class="value-chip value-chip--w2 value-chip--dice">
           <select id="dieOneInput" class="control-like">
             <option value="0">🎲</option>
             <option value="1">1</option>
@@ -1142,8 +1181,8 @@
     const flipBoardBtn = document.getElementById("flipBoardBtn");
     const backBtn = document.getElementById("backBtn");
     const clearBtn = document.getElementById("clearBtn");
-    const setupLongBtn = document.getElementById("setupLongBtn");
-    const setupShortBtn = document.getElementById("setupShortBtn");
+    const rulesSelect = document.getElementById("rulesSelect");
+    const applyRulesSetupBtn = document.getElementById("applyRulesSetupBtn");
     const dieOneInput = document.getElementById("dieOneInput");
     const dieTwoInput = document.getElementById("dieTwoInput");
     const clearDiceValuesBtn = document.getElementById("clearDiceValuesBtn");
@@ -2136,6 +2175,10 @@
       stack.push(color);
     }
 
+    function getBarSectionForColor(color) {
+      return color === "white" ? "top" : "bottom";
+    }
+
     function getCheckerPlacementAnchor(pointId, colorForPlacement = "white") {
       if (isBarPointId(pointId)) {
         return {
@@ -2152,6 +2195,30 @@
         x: point.x,
         y: point.startY + point.direction * (nextCount - 1) * step,
         color: colorForPlacement
+      };
+    }
+
+    function getCurrentCheckerAnchor(pointId) {
+      if (isBarPointId(pointId)) {
+        return {
+          x: barX,
+          y: pointId === "bar-top" ? barTopY : barBottomY
+        };
+      }
+      const pointIndex = Number(pointId);
+      if (!Number.isInteger(pointIndex) || pointIndex < 0 || pointIndex >= pointDefs.length) {
+        return { x: barX, y: barTopY };
+      }
+      const point = pointDefs[pointIndex];
+      const stack = pointStacks[pointIndex];
+      const count = stack.length;
+      if (count <= 0) {
+        return { x: point.x, y: point.startY };
+      }
+      const step = getTowerStep(count);
+      return {
+        x: point.x,
+        y: point.startY + point.direction * (count - 1) * step
       };
     }
 
@@ -2185,6 +2252,30 @@
 
         requestAnimationFrame(tick);
       });
+    }
+
+    function animateCapturedCheckerToBar(fromPointId, capturedColor, barSection) {
+      if (!capturedColor || (barSection !== "top" && barSection !== "bottom")) {
+        return Promise.resolve();
+      }
+      const fromAnchor = getAnchorForArrow(fromPointId, false);
+      const toAnchor = {
+        x: barX,
+        y: barSection === "top" ? barTopY : barBottomY
+      };
+      return animateCheckerMove(capturedColor, fromAnchor, toAnchor);
+    }
+
+    function animateCheckerFromBarToPoint(toPointId, color, barSection) {
+      if (!color || (barSection !== "top" && barSection !== "bottom")) {
+        return Promise.resolve();
+      }
+      const fromAnchor = {
+        x: barX,
+        y: barSection === "top" ? barTopY : barBottomY
+      };
+      const toAnchor = getCurrentCheckerAnchor(toPointId);
+      return animateCheckerMove(color, fromAnchor, toAnchor);
     }
 
     function animateClearToColumnBaseAndRemove() {
@@ -2319,22 +2410,54 @@
       shouldAnimateDoublingCube = false;
     }
 
-    function editPoint(pointIndex) {
+    async function editPoint(pointIndex) {
       const stack = pointStacks[pointIndex];
-      if (editMode === "white") {
-        const prevCount = stack.length;
-        stack.push("white");
-        recordEditAction({ type: "add", pointIndex, color: "white" });
-        queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
-        playSound(soundMove);
-      } else if (editMode === "black") {
-        const prevCount = stack.length;
-        stack.push("black");
-        recordEditAction({ type: "add", pointIndex, color: "black" });
-        queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
+      const placingColor = editMode === "white" ? "white" : editMode === "black" ? "black" : null;
+      if (!placingColor) {
+        return;
+      }
+      const topTargetChecker = stack.length > 0 ? stack[stack.length - 1] : null;
+      const isBlockedByOpponentTower =
+        topTargetChecker !== null &&
+        topTargetChecker !== placingColor &&
+        stack.length >= 2;
+      if (isBlockedByOpponentTower) {
+        playSound(soundCheck);
+        renderBoard();
+        return;
+      }
+      const prevCount = stack.length;
+      let capturedColor = null;
+      let capturedBarSection = null;
+      if (topTargetChecker !== null && topTargetChecker !== placingColor && stack.length === 1) {
+        capturedColor = stack.pop();
+        capturedBarSection = getBarSectionForColor(capturedColor);
+        queueTowerShiftAnimation(pointIndex, prevCount, 0);
+      }
+      stack.push(placingColor);
+      queueTowerShiftAnimation(pointIndex, prevCount, stack.length);
+      if (capturedColor) {
+        playSound(soundCheck);
+      } else {
         playSound(soundMove);
       }
       renderBoard();
+      if (capturedColor && capturedBarSection) {
+        await animateCapturedCheckerToBar(String(pointIndex), capturedColor, capturedBarSection);
+        barStacks[capturedBarSection].push(capturedColor);
+        renderBoard();
+      }
+      if (capturedColor && capturedBarSection) {
+        recordEditAction({
+          type: "addWithCapture",
+          pointIndex,
+          color: placingColor,
+          capturedColor,
+          capturedBarSection
+        });
+      } else {
+        recordEditAction({ type: "add", pointIndex, color: placingColor });
+      }
     }
 
     function deleteOneChecker(pointIndexLike) {
@@ -2451,25 +2574,61 @@
       const fromAnchor = getAnchorForArrow(fromPointId, false);
       const fromStack = getPointStackById(fromPointId);
       const toStack = getPointStackById(pointId);
+      const toIsBoardPoint = !isBarPointId(pointId);
+      const topTargetChecker = toStack && toStack.length > 0 ? toStack[toStack.length - 1] : null;
+      const isBlockedByOpponentTower =
+        toIsBoardPoint &&
+        topTargetChecker !== null &&
+        topTargetChecker !== color &&
+        toStack.length >= 2;
+      if (isBlockedByOpponentTower) {
+        playSound(soundCheck);
+        renderBoard();
+        return;
+      }
       const fromPrevCount = fromStack ? fromStack.length : 0;
       const toPrevCount = toStack ? toStack.length : 0;
+      let capturedColor = null;
+      let capturedBarSection = null;
+      if (toIsBoardPoint && topTargetChecker !== null && topTargetChecker !== color && toStack.length === 1) {
+        capturedColor = popTopChecker(pointId);
+        if (capturedColor) {
+          capturedBarSection = getBarSectionForColor(capturedColor);
+        }
+      }
       const movedColor = popTopChecker(fromPointId);
       const toAnchor = getCheckerPlacementAnchor(pointId, movedColor || color);
       isMoveAnimating = true;
       moveStartPointId = null;
       pushChecker(pointId, movedColor || color);
       moveInFlight = { toPointId: pointId, color: movedColor || color };
-      queueTowerShiftAnimation(pointId, toPrevCount, toPrevCount + 1);
+      queueTowerShiftAnimation(pointId, toPrevCount, toStack ? toStack.length : toPrevCount);
       queueTowerShiftAnimation(fromPointId, fromPrevCount, Math.max(0, fromPrevCount - 1));
-      if (pointId === "bar-top" || pointId === "bar-bottom") {
+      const shouldPlayCheckOnly = Boolean(capturedColor) || pointId === "bar-top" || pointId === "bar-bottom";
+      if (shouldPlayCheckOnly) {
         playSound(soundCheck);
       } else {
         playSound(soundMove);
       }
       renderBoard();
-      await animateCheckerMove(movedColor || color, fromAnchor, toAnchor);
+      if (capturedColor && capturedBarSection) {
+        await Promise.all([
+          animateCheckerMove(movedColor || color, fromAnchor, toAnchor),
+          animateCapturedCheckerToBar(pointId, capturedColor, capturedBarSection)
+        ]);
+        barStacks[capturedBarSection].push(capturedColor);
+      } else {
+        await animateCheckerMove(movedColor || color, fromAnchor, toAnchor);
+      }
       moveInFlight = null;
-      recordEditAction({ type: "moveChecker", from: fromPointId, to: pointId, color: movedColor || color });
+      recordEditAction({
+        type: "moveChecker",
+        from: fromPointId,
+        to: pointId,
+        color: movedColor || color,
+        capturedColor,
+        capturedBarSection
+      });
       isMoveAnimating = false;
       renderBoard();
     }
@@ -2522,24 +2681,74 @@
         const toPrevCount = toStack ? toStack.length : 0;
         const reverseFromAnchor = getAnchorForArrow(lastAction.to, false);
         const moved = popTopChecker(lastAction.to);
-        queueTowerShiftAnimation(lastAction.to, toPrevCount, Math.max(0, toPrevCount - 1));
-        queueTowerShiftAnimation(lastAction.from, fromPrevCount, fromPrevCount + 1);
+        let restoredColor = null;
+        if (lastAction.capturedColor && lastAction.capturedBarSection) {
+          const capturedBarStack = barStacks[lastAction.capturedBarSection];
+          if (capturedBarStack.length > 0) {
+            restoredColor = capturedBarStack.pop();
+          }
+        }
+        const toNextCount = Math.max(0, toPrevCount - 1) + (restoredColor ? 1 : 0);
+        queueTowerShiftAnimation(lastAction.to, toPrevCount, toNextCount);
+        queueTowerShiftAnimation(lastAction.from, fromPrevCount, fromPrevCount + (moved ? 1 : 0));
         if (moved) {
-          const reverseToAnchor = getCheckerPlacementAnchor(lastAction.from, moved);
-          isMoveAnimating = true;
           pushChecker(lastAction.from, moved);
           moveInFlight = { toPointId: lastAction.from, color: moved };
-          if (lastAction.from === "bar-top" || lastAction.from === "bar-bottom") {
+        }
+        if (moved || restoredColor) {
+          isMoveAnimating = true;
+          if (lastAction.from === "bar-top" || lastAction.from === "bar-bottom" || restoredColor) {
             playSound(soundCheck);
           } else {
             playSound(soundMove);
           }
           renderBoard();
-          await animateCheckerMove(moved, reverseFromAnchor, reverseToAnchor);
+          const undoAnimations = [];
+          if (moved) {
+            const reverseToAnchor = getCurrentCheckerAnchor(lastAction.from);
+            undoAnimations.push(animateCheckerMove(moved, reverseFromAnchor, reverseToAnchor));
+          }
+          if (restoredColor) {
+            const restoreFromAnchor = {
+              x: barX,
+              y: lastAction.capturedBarSection === "top" ? barTopY : barBottomY
+            };
+            const restoreToAnchor = getCheckerPlacementAnchor(lastAction.to, restoredColor);
+            undoAnimations.push(animateCheckerMove(restoredColor, restoreFromAnchor, restoreToAnchor));
+          }
+          await Promise.all(undoAnimations);
+          if (restoredColor) {
+            pushChecker(lastAction.to, restoredColor);
+          }
           moveInFlight = null;
           isMoveAnimating = false;
         }
         moveStartPointId = null;
+        redoHistory.push(lastAction);
+        renderBoard();
+        return;
+      }
+
+      if (lastAction.type === "addWithCapture") {
+        const stack = pointStacks[lastAction.pointIndex];
+        const prevCount = stack.length;
+        if (stack.length > 0) {
+          stack.pop();
+        }
+        if (lastAction.capturedColor && lastAction.capturedBarSection) {
+          const capturedBarStack = barStacks[lastAction.capturedBarSection];
+          if (capturedBarStack.length > 0) {
+            const restored = capturedBarStack.pop();
+            if (restored) {
+              stack.push(restored);
+              moveInFlight = { toPointId: String(lastAction.pointIndex), color: restored };
+              renderBoard();
+              await animateCheckerFromBarToPoint(String(lastAction.pointIndex), restored, lastAction.capturedBarSection);
+              moveInFlight = null;
+            }
+          }
+        }
+        queueTowerShiftAnimation(lastAction.pointIndex, prevCount, stack.length);
         redoHistory.push(lastAction);
         renderBoard();
         return;
@@ -2610,13 +2819,36 @@
         const toStack = getPointStackById(redoAction.to);
         const fromPrevCount = fromStack ? fromStack.length : 0;
         const toPrevCount = toStack ? toStack.length : 0;
+        if (redoAction.capturedColor && redoAction.capturedBarSection) {
+          const targetStack = getPointStackById(redoAction.to);
+          const topTarget = targetStack && targetStack.length > 0 ? targetStack[targetStack.length - 1] : null;
+          if (topTarget === redoAction.capturedColor) {
+            popTopChecker(redoAction.to);
+            barStacks[redoAction.capturedBarSection].push(redoAction.capturedColor);
+          }
+        }
         const moved = popTopChecker(redoAction.from);
         if (moved) {
           pushChecker(redoAction.to, moved);
         }
         queueTowerShiftAnimation(redoAction.from, fromPrevCount, Math.max(0, fromPrevCount - 1));
-        queueTowerShiftAnimation(redoAction.to, toPrevCount, toPrevCount + 1);
+        queueTowerShiftAnimation(redoAction.to, toPrevCount, toStack ? toStack.length : toPrevCount);
         moveStartPointId = null;
+        editHistory.push(redoAction);
+        renderBoard();
+        return;
+      }
+
+      if (redoAction.type === "addWithCapture") {
+        const stack = pointStacks[redoAction.pointIndex];
+        const prevCount = stack.length;
+        const topTarget = stack.length > 0 ? stack[stack.length - 1] : null;
+        if (topTarget === redoAction.capturedColor) {
+          stack.pop();
+          barStacks[redoAction.capturedBarSection].push(redoAction.capturedColor);
+        }
+        stack.push(redoAction.color);
+        queueTowerShiftAnimation(redoAction.pointIndex, prevCount, stack.length);
         editHistory.push(redoAction);
         renderBoard();
         return;
@@ -2761,6 +2993,15 @@
     function applyShortNardySetup() {
       clearBoardState(false);
       runStackBuildupAnimation(buildShortSetupTargets());
+    }
+
+    function applySetupForSelectedRules() {
+      const selectedRules = rulesSelect ? String(rulesSelect.value) : "short";
+      if (selectedRules === "long") {
+        applyLongNardySetup();
+        return;
+      }
+      applyShortNardySetup();
     }
 
     function stopDeleteHold() {
@@ -3689,8 +3930,7 @@
     clearBtn.addEventListener("click", () => {
       clearBoardState(false);
     });
-    setupLongBtn.addEventListener("click", applyLongNardySetup);
-    setupShortBtn.addEventListener("click", applyShortNardySetup);
+    applyRulesSetupBtn.addEventListener("click", applySetupForSelectedRules);
 
     Object.entries(modeButtons).forEach(([mode, btn]) => {
       btn.addEventListener("click", () => {
