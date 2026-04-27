@@ -31,6 +31,9 @@
       --panel-font: Arial, Helvetica, sans-serif;
       --panel-font-size: 14px;
       --panel-line-height: 1.35;
+      --cube-icon-fill: #4a6439;
+      --cube-icon-stroke: #8c662e;
+      --cube-icon-text: #e8eaff;
       --ui-button-width: 48px;
       --ui-button-height: 36px;
     }
@@ -279,6 +282,47 @@
       box-sizing: border-box;
     }
 
+    .panel-board-size-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-board-size-title {
+      font-weight: 700;
+    }
+
+    .panel-board-size-body {
+      display: grid;
+      gap: 4px;
+    }
+
+    .panel-board-size.is-collapsed .panel-board-size-body {
+      display: none;
+    }
+
+    .panel-board-size.is-collapsed {
+      padding: 2px 6px;
+      min-height: 0;
+    }
+
+    .panel-board-size.is-collapsed .panel-board-size-header {
+      gap: 6px;
+    }
+
+    .panel-board-size.is-collapsed .panel-board-size-title {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .panel-board-size.is-collapsed #toggleBoardSizePanelBtn {
+      width: 30px;
+      height: 24px;
+      min-height: 24px;
+      font-size: 14px;
+    }
+
     .panel-board-size label {
       display: flex;
       align-items: center;
@@ -429,15 +473,15 @@
     }
 
     .cube-x2-icon-box {
-      fill: #4d6f3a;
-      stroke: #2c4e23;
+      fill: var(--cube-icon-fill);
+      stroke: var(--cube-icon-stroke);
       stroke-width: 1.4;
       rx: 2.5;
       ry: 2.5;
     }
 
     .cube-x2-icon-text {
-      fill: #e8eaff;
+      fill: var(--cube-icon-text);
       font-size: 9px;
       font-weight: 700;
       font-family: Arial, Helvetica, sans-serif;
@@ -753,20 +797,26 @@
   </style>
 </head>
 <body>
-  <div class="panel-board-size" aria-label="Размер игрового поля">
-    <label>
-      <span>Высота поля</span>
-      <input id="fieldHeightSlider" type="range" min="0" max="220" step="1" value="90" />
-      <span id="fieldHeightValue" class="value-chip">90%</span>
-    </label>
-    <label>
-      <span>Размер кубиков</span>
-      <input id="diceSizeSlider" type="range" min="30" max="72" step="1" value="40" />
-      <span id="diceSizeValue" class="value-chip">40px</span>
-    </label>
-    <div class="panel-board-size-stats">
-      <span id="fieldHeightPxValue" class="value-chip">Высота поля: 624px</span>
-      <span id="fieldSpaceWidthValue" class="value-chip">Ширина поля: 589.6px</span>
+  <div id="boardSizePanel" class="panel-board-size is-collapsed" aria-label="Размер игрового поля">
+    <div class="panel-board-size-header">
+      <span class="panel-board-size-title">Размеры</span>
+      <button id="toggleBoardSizePanelBtn" class="ui-icon-btn" type="button" aria-expanded="false" aria-controls="boardSizePanelBody" title="Развернуть панель размеров">⚙️</button>
+    </div>
+    <div id="boardSizePanelBody" class="panel-board-size-body" hidden>
+      <label>
+        <span>Высота поля</span>
+        <input id="fieldHeightSlider" type="range" min="0" max="220" step="1" value="90" />
+        <span id="fieldHeightValue" class="value-chip">90%</span>
+      </label>
+      <label>
+        <span>Размер кубиков</span>
+        <input id="diceSizeSlider" type="range" min="30" max="72" step="1" value="40" />
+        <span id="diceSizeValue" class="value-chip">40px</span>
+      </label>
+      <div class="panel-board-size-stats">
+        <span id="fieldHeightPxValue" class="value-chip">Высота поля: 624px</span>
+        <span id="fieldSpaceWidthValue" class="value-chip">Ширина поля: 589.6px</span>
+      </div>
     </div>
   </div>
 
@@ -899,7 +949,7 @@
     <div class="panel-dice" aria-label="Куб удвоения и кости">
       <div class="row">
         <label class="value-chip value-chip--w2 value-chip--cube">
-          <svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <svg width="28" height="28" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
             <rect class="cube-x2-icon-box" x="0.5" y="0.5" width="15" height="15" />
             <text class="cube-x2-icon-text" x="8" y="8">x2</text>
           </svg>
@@ -1085,6 +1135,9 @@
       root.style.setProperty("--checker-white-bd", p.checkerWhiteStroke);
       root.style.setProperty("--checker-black-bg", p.checkerBlackFill);
       root.style.setProperty("--checker-black-bd", p.checkerBlackStroke);
+      root.style.setProperty("--cube-icon-fill", p.cubeFill);
+      root.style.setProperty("--cube-icon-stroke", p.cubeStroke);
+      root.style.setProperty("--cube-icon-text", p.cubeText);
     }
 
     function applyBoardPalette(paletteKey) {
@@ -1206,6 +1259,9 @@
 
     const zoomOutBtn = document.getElementById("zoomOutBtn");
     const zoomInBtn = document.getElementById("zoomInBtn");
+    const boardSizePanel = document.getElementById("boardSizePanel");
+    const boardSizePanelBody = document.getElementById("boardSizePanelBody");
+    const toggleBoardSizePanelBtn = document.getElementById("toggleBoardSizePanelBtn");
     const fieldHeightSlider = document.getElementById("fieldHeightSlider");
     const fieldHeightValue = document.getElementById("fieldHeightValue");
     const fieldHeightPxValue = document.getElementById("fieldHeightPxValue");
@@ -1278,6 +1334,17 @@
       move: document.getElementById("modeMoveBtn"),
       delete: document.getElementById("modeDeleteBtn")
     };
+
+    function setBoardSizePanelCollapsed(isCollapsed) {
+      if (!boardSizePanel || !boardSizePanelBody || !toggleBoardSizePanelBtn) {
+        return;
+      }
+      boardSizePanel.classList.toggle("is-collapsed", isCollapsed);
+      boardSizePanelBody.hidden = isCollapsed;
+      toggleBoardSizePanelBtn.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+      toggleBoardSizePanelBtn.setAttribute("title", isCollapsed ? "Развернуть панель размеров" : "Свернуть панель размеров");
+      toggleBoardSizePanelBtn.textContent = isCollapsed ? "⚙️" : "✖";
+    }
     const baseBoardWidth = 808;
     const radius = 21.284;
     const defaultStep = radius * 2 + 1;
@@ -3852,6 +3919,12 @@
     zoomInBtn.addEventListener("click", () => {
       setBoardScale(currentBoardScale + 10);
     });
+    if (toggleBoardSizePanelBtn) {
+      toggleBoardSizePanelBtn.addEventListener("click", () => {
+        const isCollapsedNow = boardSizePanel ? boardSizePanel.classList.contains("is-collapsed") : true;
+        setBoardSizePanelCollapsed(!isCollapsedNow);
+      });
+    }
     if (fieldHeightSlider) {
       const { minOffset, maxOffset } = getFieldHeightOffsetBounds();
       fieldHeightSlider.min = String(minOffset);
@@ -4038,6 +4111,7 @@
 
     initBoardPaletteFromStorage();
     initSoundFromStorage();
+    setBoardSizePanelCollapsed(true);
     applyCenterGapLayout();
     createPointLabels();
     createHitZones();
