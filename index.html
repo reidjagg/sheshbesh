@@ -108,7 +108,7 @@
     .panel-modes,
     .panel-dice,
     .panel-board-size {
-      width: auto;
+      width: min(var(--desktop-panel-width, 404px), 100%);
       box-sizing: border-box;
     }
 
@@ -154,12 +154,15 @@
 
     .actions button {
       padding: 8px 12px;
+      height: 36px;
+      min-height: 36px;
       border: 1px solid var(--ui-btn-border);
       border-radius: 6px;
       background: var(--ui-btn);
       color: var(--ui-text);
       cursor: pointer;
       font: inherit;
+      box-sizing: border-box;
     }
 
     .actions button:hover {
@@ -222,7 +225,7 @@
       font-family: var(--panel-font);
       font-size: var(--panel-font-size);
       line-height: var(--panel-line-height);
-      width: auto;
+      width: min(var(--desktop-panel-width, 404px), 100%);
       box-sizing: border-box;
     }
 
@@ -260,6 +263,8 @@
       align-items: center;
       gap: 4px;
       padding: 8px 10px;
+      height: 36px;
+      min-height: 36px;
       border: 1px solid var(--ui-btn-border);
       border-radius: 6px;
       background: var(--ui-btn);
@@ -267,6 +272,7 @@
       cursor: pointer;
       user-select: none;
       font: inherit;
+      box-sizing: border-box;
     }
 
     .mode-btn:hover {
@@ -429,6 +435,40 @@
       transform: translateY(0.5px);
     }
 
+    .dice-reset-icon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      line-height: 1;
+      font-size: 15px;
+    }
+
+    .dice-reset-icon::before,
+    .dice-reset-icon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 3px;
+      height: 16px;
+      background: #d22;
+      border-radius: 1px;
+      transform-origin: center;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .dice-reset-icon::before {
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .dice-reset-icon::after {
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
     .hover-zone {
       fill: #fff;
       opacity: 0;
@@ -558,11 +598,17 @@
 
     .board-palette-swatch {
       position: absolute;
-      inset: 6px 8px;
+      width: 24px;
+      height: 24px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
       border-radius: 2px;
       box-sizing: border-box;
       pointer-events: none;
-      background: linear-gradient(to right, #c9b797 50%, #ff4422 50%);
+      background-image: linear-gradient(to right, #c9b797 0 50%, #ff4422 50% 100%);
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
     }
 
     .board-palette-dropdown {
@@ -575,7 +621,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       padding: 4px;
       margin: 0;
       list-style: none;
@@ -590,16 +636,23 @@
       display: none !important;
     }
 
-    .board-palette-option {
+    .board-palette-dropdown .board-palette-option {
       display: block;
-      width: 32px;
-      height: 24px;
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px !important;
+      min-height: 24px !important;
+      aspect-ratio: 1 / 1;
+      flex-shrink: 0;
       margin: 0;
-      padding: 0;
+      padding: 0 !important;
+      appearance: none;
+      -webkit-appearance: none;
       border: 1px solid transparent;
-      border-radius: 2px;
+      border-radius: 4px;
       cursor: pointer;
       box-sizing: border-box;
+      line-height: 0;
       background-clip: padding-box;
     }
 
@@ -658,7 +711,7 @@
           <div id="paletteMenuDropdown" class="board-palette-dropdown" role="listbox" hidden aria-label="Палитры"></div>
         </div>
       </div>
-      <button id="soundToggleBtn" type="button" aria-label="Переключить звук" title="Звук">Звук🔊</button>
+      <button id="soundToggleBtn" class="ui-icon-btn" type="button" aria-label="Переключить звук" title="Звук">🔊</button>
     </div>
 
     <div class="actions actions--setup" aria-label="Расстановка и отмена">
@@ -773,7 +826,7 @@
             <option value="64">64</option>
           </select>
         </label>
-        <label class="value-chip"> 🎲 
+        <label class="value-chip">🎲
           <select id="dieOneInput" class="control-like">
             <option value="0">0</option>
             <option value="1">1</option>
@@ -783,8 +836,6 @@
             <option value="5">5</option>
             <option value="6">6</option>
           </select>
-        </label>
-        <label class="value-chip"> 🎲 
           <select id="dieTwoInput" class="control-like">
             <option value="0">0</option>
             <option value="1">1</option>
@@ -795,6 +846,9 @@
             <option value="6">6</option>
           </select>
         </label>
+        <button id="clearDiceValuesBtn" class="mode-btn ui-icon-btn" type="button" aria-label="Обнулить куб и кости" title="Обнулить куб и кости">
+          <span class="dice-reset-icon">🎲</span>
+        </button>
         <button id="rollDiceBtn" class="mode-btn ui-icon-btn" type="button" aria-label="Бросок кубиков" title="Бросок кубиков">
           <span class="roll-icon-overlap">
             <span class="roll-icon-die">🎲</span><span class="roll-icon-hand">👋</span>
@@ -975,7 +1029,9 @@
         });
       }
       if (paletteSwatchPreview) {
-        paletteSwatchPreview.style.background = `linear-gradient(to right, ${p.triA} 50%, ${p.triB} 50%)`;
+        paletteSwatchPreview.style.backgroundImage = `linear-gradient(to right, ${p.triA} 0 50%, ${p.triB} 50% 100%)`;
+        paletteSwatchPreview.style.backgroundRepeat = "no-repeat";
+        paletteSwatchPreview.style.backgroundSize = "100% 100%";
       }
       syncPaletteMenuOptions();
     }
@@ -1027,7 +1083,9 @@
         opt.className = "board-palette-option";
         opt.dataset.paletteKey = paletteKey;
         opt.setAttribute("aria-selected", "false");
-        opt.style.background = `linear-gradient(to right, ${p.triA} 50%, ${p.triB} 50%)`;
+        opt.style.backgroundImage = `linear-gradient(to right, ${p.triA} 0 50%, ${p.triB} 50% 100%)`;
+        opt.style.backgroundRepeat = "no-repeat";
+        opt.style.backgroundSize = "100% 100%";
         opt.setAttribute("aria-label", PALETTE_OPTION_LABELS[paletteKey] || paletteKey);
         opt.addEventListener("click", (event) => {
           event.stopPropagation();
@@ -1074,6 +1132,7 @@
     const setupShortBtn = document.getElementById("setupShortBtn");
     const dieOneInput = document.getElementById("dieOneInput");
     const dieTwoInput = document.getElementById("dieTwoInput");
+    const clearDiceValuesBtn = document.getElementById("clearDiceValuesBtn");
     const rollDiceBtn = document.getElementById("rollDiceBtn");
     const enableShakeBtn = document.getElementById("enableShakeBtn");
     const cubeValueInput = document.getElementById("cubeValueInput");
@@ -2114,6 +2173,68 @@
       });
     }
 
+    function animateClearToColumnBaseAndRemove() {
+      const exitingCheckers = [];
+      for (let pointIndex = 0; pointIndex < pointStacks.length; pointIndex += 1) {
+        const stack = pointStacks[pointIndex];
+        if (!stack || stack.length === 0) {
+          continue;
+        }
+        const point = pointDefs[pointIndex];
+        const step = getTowerStep(stack.length);
+        for (let i = 0; i < stack.length; i += 1) {
+          const style = checkerStyleForColor(stack[i]);
+          const cx = point.x;
+          const cy = point.startY + point.direction * i * step;
+          exitingCheckers.push({ cx, cy, targetY: point.startY, style });
+        }
+      }
+      if (exitingCheckers.length === 0) {
+        return;
+      }
+
+      // Hide rendered stacks so only clear animation is visible.
+      checkersUnderArrowsLayer.replaceChildren();
+      checkersOverArrowsLayer.replaceChildren();
+      countLabelsLayer.replaceChildren();
+
+      const animatedNodes = exitingCheckers.map((checker) => {
+        const circle = document.createElementNS(svgNs, "circle");
+        circle.setAttribute("r", String(radius));
+        circle.setAttribute("cx", String(checker.cx));
+        circle.setAttribute("cy", String(checker.cy));
+        circle.setAttribute("fill", checker.style.fill);
+        circle.setAttribute("stroke", checker.style.stroke);
+        circle.setAttribute("stroke-width", "3");
+        checkersOverArrowsLayer.appendChild(circle);
+        return { node: circle, checker };
+      });
+
+      animatedNodes.forEach(({ node, checker }) => {
+        if (typeof node.animate !== "function") {
+          node.remove();
+          return;
+        }
+        const deltaY = checker.targetY - checker.cy;
+        if (Math.abs(deltaY) < 0.01) {
+          node.remove();
+          return;
+        }
+        const anim = node.animate(
+          [
+            { transform: "translateY(0px)" },
+            { transform: `translateY(${deltaY}px)` }
+          ],
+          {
+            duration: 340,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            fill: "forwards"
+          }
+        );
+        anim.addEventListener("finish", () => node.remove());
+      });
+    }
+
     function addCheckerToBar(section, color) {
       if (section !== "top" && section !== "bottom") {
         return;
@@ -2510,7 +2631,7 @@
       renderBoard();
     }
 
-    function clearBoardState() {
+    function finishClearBoardState(shouldRender = true) {
       pointStacks.forEach((stack) => {
         stack.length = 0;
       });
@@ -2528,7 +2649,32 @@
       dieTwoInput.value = "0";
       cubeValueInput.value = "0";
       diceSnapshot = { die1: "0", die2: "0", cube: "0" };
-      renderBoard();
+      if (shouldRender) {
+        renderBoard();
+      }
+    }
+
+    function clearBoardState(withCollapseAnimation = false) {
+      if (!withCollapseAnimation) {
+        finishClearBoardState();
+        return;
+      }
+
+      arrows.length = 0;
+      lineStartPointIndex = null;
+      moveStartPointId = null;
+      moveInFlight = null;
+      const hadAnyStacks = pointStacks.some((stack) => stack.length > 0);
+      if (!hadAnyStacks) {
+        finishClearBoardState();
+        return;
+      }
+
+      animateClearToColumnBaseAndRemove();
+      finishClearBoardState(false);
+      window.setTimeout(() => {
+        renderBoard();
+      }, 360);
     }
 
     function buildLongSetupTargets() {
@@ -2594,12 +2740,12 @@
     }
 
     function applyLongNardySetup() {
-      clearBoardState();
+      clearBoardState(false);
       runStackBuildupAnimation(buildLongSetupTargets());
     }
 
     function applyShortNardySetup() {
-      clearBoardState();
+      clearBoardState(false);
       runStackBuildupAnimation(buildShortSetupTargets());
     }
 
@@ -2792,6 +2938,7 @@
       diceSizeValue.textContent = `${Math.round(currentDiceSize)}px`;
     }
 
+
     function getMinimumAllowedFieldHeight() {
       const tenCheckersHeight = checkerDiameter * 10;
       const minHeightByRule = tenCheckersHeight + currentDiceSize;
@@ -2883,6 +3030,14 @@
         return 50;
       }
       return getMaxScreenScale();
+    }
+
+    function syncDesktopPanelWidthFromCurrentScale() {
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        return;
+      }
+      const width = (baseBoardWidth * currentBoardScale) / 100;
+      document.documentElement.style.setProperty("--desktop-panel-width", `${width}px`);
     }
 
     function applyBoardFlip() {
@@ -3279,7 +3434,7 @@
       if (!soundToggleBtn) {
         return;
       }
-      soundToggleBtn.textContent = isSoundEnabled ? "Звук 🔊" : "Звук 🔈";
+      soundToggleBtn.textContent = isSoundEnabled ? "🔊" : "🔈";
       soundToggleBtn.setAttribute("aria-pressed", isSoundEnabled ? "true" : "false");
       soundToggleBtn.setAttribute("title", isSoundEnabled ? "Выключить звук" : "Включить звук");
     }
@@ -3446,6 +3601,28 @@
       playSound(soundRoll);
       recordDiceChangeIfNeeded();
     });
+    if (clearDiceValuesBtn) {
+      clearDiceValuesBtn.addEventListener("click", () => {
+        const prev = getDiceFromInputs();
+        const next = { die1: "0", die2: "0", cube: "0" };
+        if (prev.die1 === next.die1 && prev.die2 === next.die2 && prev.cube === next.cube) {
+          return;
+        }
+        dieOneInput.value = next.die1;
+        dieTwoInput.value = next.die2;
+        cubeValueInput.value = next.cube;
+        recordEditAction({
+          type: "diceCube",
+          prev: { ...prev },
+          next
+        });
+        playSound(soundCheck);
+        shouldAnimateDice = false;
+        shouldAnimateDoublingCube = false;
+        renderBoard();
+        syncDiceSnapshotFromInputs();
+      });
+    }
     rollDiceBtn.addEventListener("click", () => {
       rollDiceRandomly();
     });
@@ -3495,7 +3672,9 @@
       applyBoardFlip();
     });
     backBtn.addEventListener("click", undoLastEdit);
-    clearBtn.addEventListener("click", clearBoardState);
+    clearBtn.addEventListener("click", () => {
+      clearBoardState(false);
+    });
     setupLongBtn.addEventListener("click", applyLongNardySetup);
     setupShortBtn.addEventListener("click", applyShortNardySetup);
 
@@ -3583,6 +3762,7 @@
     syncFieldHeightValue();
     syncBoardGeometryStats();
     setBoardScale(getInitialBoardScale());
+    syncDesktopPanelWidthFromCurrentScale();
     applyMode("move");
     applyBoardFlip();
     renderBoard();
