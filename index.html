@@ -70,7 +70,6 @@
         align-self: stretch !important;
       }
 
-      .actions button,
       .panel-modes .mode-btn,
       .panel-dice .mode-btn,
       .board-palette-chip {
@@ -78,8 +77,6 @@
         min-width: 0;
       }
 
-      .actions--toolbar,
-      .actions--setup,
       .panel-modes .row,
       .panel-dice .row {
         display: grid;
@@ -90,12 +87,23 @@
         align-items: stretch;
       }
 
-      .actions--toolbar > .ui-icon-btn,
-      .actions--toolbar > .board-palette-chip,
-      .actions--setup > .ui-icon-btn,
       .panel-modes .row > .mode-btn,
       .panel-dice .row > .ui-icon-btn {
         grid-column: span 1;
+      }
+
+      .actions--toolbar,
+      .actions--setup {
+        display: flex !important;
+        flex-wrap: nowrap;
+        align-items: stretch;
+      }
+
+      .actions--toolbar > .ui-icon-btn,
+      .actions--toolbar > .board-palette-chip,
+      .actions--setup > .ui-icon-btn {
+        flex: 1 1 0;
+        width: auto !important;
       }
 
       .panel-dice .row > .value-chip--w2 {
@@ -104,8 +112,8 @@
       }
 
       .actions--setup > .value-chip--w4 {
-        grid-column: span 4;
-        width: 100% !important;
+        flex: 4 1 0;
+        width: auto !important;
       }
 
       .board-palette-wrap {
