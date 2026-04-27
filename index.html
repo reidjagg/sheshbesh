@@ -97,13 +97,15 @@
         display: flex !important;
         flex-wrap: nowrap;
         align-items: stretch;
+        --mobile-actions-gap: 4px;
+        --mobile-actions-cell: calc((100% - (var(--mobile-actions-gap) * 5)) / 6);
       }
 
       .actions--toolbar > .ui-icon-btn,
       .actions--toolbar > .board-palette-chip,
       .actions--setup > .ui-icon-btn {
-        flex: 1 1 0;
-        width: auto !important;
+        flex: 0 0 auto;
+        width: var(--mobile-actions-cell) !important;
       }
 
       .panel-dice .row > .value-chip--w2 {
@@ -112,8 +114,8 @@
       }
 
       .actions--setup > .value-chip--w4 {
-        flex: 4 1 0;
-        width: auto !important;
+        flex: 0 0 auto;
+        width: calc((var(--mobile-actions-cell) * 4) + (var(--mobile-actions-gap) * 3)) !important;
       }
 
       .board-palette-wrap {
