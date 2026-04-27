@@ -31,6 +31,7 @@
       --panel-font: Arial, Helvetica, sans-serif;
       --panel-font-size: 14px;
       --panel-line-height: 1.35;
+      --board-panel-width: 671.167px;
     }
 
     body {
@@ -67,24 +68,18 @@
         padding-right: 0;
       }
 
-      .actions--toolbar {
-        margin-top: 0;
-      }
-
-      .actions--setup {
-        margin-top: 4px;
-        margin-bottom: 4px;
-      }
-
+      .actions--toolbar,
+      .actions--setup,
       .panel-modes,
       .panel-dice,
       .panel-board-size {
         margin-top: 4px;
+        margin-bottom: 0;
       }
 
       #boardSvg {
         align-self: stretch;
-        margin: 0;
+        margin: 4px 0 0;
         max-width: none;
       }
     }
@@ -93,11 +88,19 @@
       width: 671.167px;
       height: auto;
       display: block;
-      margin: 0 auto;
+      margin: 6px auto 0;
       align-self: center;
       max-width: 100%;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
+    }
+
+    .actions,
+    .panel-modes,
+    .panel-dice,
+    .panel-board-size {
+      width: min(var(--board-panel-width), 100%);
+      box-sizing: border-box;
     }
 
     svg text {
@@ -127,13 +130,16 @@
       line-height: var(--panel-line-height);
     }
 
-    .actions--setup {
+    .actions--setup,
+    .actions--toolbar,
+    .panel-modes,
+    .panel-dice,
+    .panel-board-size {
       margin-top: 6px;
-      margin-bottom: 6px;
+      margin-bottom: 0;
     }
 
     .actions--toolbar {
-      margin-top: 6px;
       align-self: center;
     }
 
@@ -158,7 +164,6 @@
     }
 
     .panel-modes {
-      margin-top: 6px;
       display: grid;
       gap: 4px;
       padding: 6px 8px;
@@ -173,7 +178,6 @@
     }
 
     .panel-dice {
-      margin-top: 6px;
       display: grid;
       gap: 4px;
       padding: 6px 8px;
@@ -188,7 +192,6 @@
     }
 
     .panel-board-size {
-      margin-top: 6px;
       display: grid;
       gap: 4px;
       padding: 6px 8px;
@@ -200,7 +203,7 @@
       font-family: var(--panel-font);
       font-size: var(--panel-font-size);
       line-height: var(--panel-line-height);
-      width: min(671px, 100%);
+      width: min(var(--board-panel-width), 100%);
       box-sizing: border-box;
     }
 
@@ -458,13 +461,13 @@
   <div class="panel-board-size" aria-label="Размер игрового поля">
     <label>
       <span>Высота поля</span>
-      <input id="fieldHeightSlider" type="range" min="0" max="220" step="1" value="0" />
-      <span id="fieldHeightValue" class="value-chip">100%</span>
+      <input id="fieldHeightSlider" type="range" min="0" max="220" step="1" value="90" />
+      <span id="fieldHeightValue" class="value-chip">90%</span>
     </label>
     <label>
       <span>Размер кубиков</span>
-      <input id="diceSizeSlider" type="range" min="30" max="72" step="1" value="45" />
-      <span id="diceSizeValue" class="value-chip">45px</span>
+      <input id="diceSizeSlider" type="range" min="30" max="72" step="1" value="40" />
+      <span id="diceSizeValue" class="value-chip">40px</span>
     </label>
     <div class="panel-board-size-stats">
       <span id="fieldHeightPxValue" class="value-chip">Высота поля: 624px</span>
@@ -515,10 +518,10 @@
       </div>
     </div>
 
-    <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="243.625 0 636.751 669" width="636.751" height="669" role="img" aria-label="Игровая доска">
+    <svg id="boardSvg" xmlns="http://www.w3.org/2000/svg" viewBox="255.417 0 613.167 669" width="613.167" height="669" role="img" aria-label="Игровая доска">
       <g id="boardContent">
         <defs id="arrowDefs"></defs>
-        <rect x="243.625" y="0" width="636.751" height="669" rx="20" ry="20" data-board="frame" fill="#423122" stroke="#000" stroke-width="1"/>
+        <rect x="255.417" y="0" width="613.167" height="669" rx="20" ry="20" data-board="frame" fill="#423122" stroke="#000" stroke-width="1"/>
         <rect x="267.208" y="22" width="283" height="624" data-board="field" fill="#4a6439"/>
         <rect x="573.792" y="22" width="283" height="624" data-board="field" fill="#4a6439"/>
 
@@ -957,8 +960,9 @@
     const boardCenterShift = (baseCenterGapWidth - boardBarGapWidth) / 2;
     const leftFieldRectX = innerBoardLeftX + boardCenterShift;
     const rightFieldRectX = 591 - boardCenterShift;
-    const frameX = 226.417 + boardCenterShift;
-    const frameWidth = 671.167 - boardCenterShift * 2;
+    const outerFramePadding = cellWidth * 0.25;
+    const frameX = leftFieldRectX - outerFramePadding;
+    const frameWidth = (rightFieldRectX + baseFieldRectWidth + outerFramePadding) - frameX;
     const arrowStartWidth = cellWidth;
     const arrowEndWidth = cellWidth * 0.1;
     let isBoardFlipped = false;
@@ -1022,7 +1026,7 @@
     const baseFieldTopY = 22;
     const baseFieldHeight = 624;
     const baseBoardHeight = 669;
-    const defaultDiceSize = 45;
+    const defaultDiceSize = 40;
     const minDiceSize = 30;
     const maxDiceSize = 72;
     const checkerDiameter = radius * 2;
@@ -1032,7 +1036,9 @@
     const doublingCubeCenterX = leftFieldRectX + baseFieldRectWidth + boardBarGapWidth / 2;
     const initialFieldHeight = rightFieldRectX + baseFieldRectWidth - leftFieldRectX;
     const initialFieldHeightOffset = Math.round(baseFieldHeight - initialFieldHeight);
-    let boardFieldHeightOffset = initialFieldHeightOffset;
+    const defaultFieldHeightPercent = 90;
+    const defaultFieldHeight = Math.round((initialFieldHeight * defaultFieldHeightPercent) / 100);
+    let boardFieldHeightOffset = Math.round(baseFieldHeight - defaultFieldHeight);
     let currentDiceSize = defaultDiceSize;
 
     const pointDefs = [
@@ -1367,9 +1373,18 @@
       pointLabelsLayer.setAttribute("visibility", "visible");
     }
 
+    /** Один и тот же внешний «бокс» кости и куба удвоения при заданном `size` (ползунок кубиков). */
+    function getGameDieBoxMetrics(size) {
+      const s = size;
+      return {
+        cornerRadius: Math.max(3, s * 0.09),
+        strokeWidth: Math.max(1, (s * 2) / defaultDiceSize)
+      };
+    }
+
     function drawDie(x, y, size, value, animateSpin = false, animationDelayMs = 0) {
       const dieSize = size;
-      const cornerRadius = Math.max(3, dieSize * 0.09);
+      const { cornerRadius, strokeWidth } = getGameDieBoxMetrics(dieSize);
       const pipRadius = dieSize * 0.1;
       const offsetSmall = dieSize * (7.6 / 35);
       const offsetMid = dieSize * 0.5;
@@ -1386,7 +1401,7 @@
       die.setAttribute("ry", String(cornerRadius));
       die.setAttribute("fill", "#fff");
       die.setAttribute("stroke", "#ccc");
-      die.setAttribute("stroke-width", "2");
+      die.setAttribute("stroke-width", String(strokeWidth));
       dieGroup.appendChild(die);
 
       const positions = {
@@ -1475,6 +1490,7 @@
 
     function drawDoublingCube(value, x, y, size, animateSpin = false) {
       const pal = getActivePalette();
+      const { cornerRadius, strokeWidth } = getGameDieBoxMetrics(size);
       const cubeGroup = document.createElementNS(svgNs, "g");
       cubeGroup.setAttribute("style", "transform-box: fill-box; transform-origin: center;");
       const cube = document.createElementNS(svgNs, "rect");
@@ -1482,18 +1498,18 @@
       cube.setAttribute("y", String(y));
       cube.setAttribute("width", String(size));
       cube.setAttribute("height", String(size));
-      cube.setAttribute("rx", String(Math.max(3, size * 0.09)));
-      cube.setAttribute("ry", String(Math.max(3, size * 0.09)));
+      cube.setAttribute("rx", String(cornerRadius));
+      cube.setAttribute("ry", String(cornerRadius));
       cube.setAttribute("fill", pal.cubeFill);
-      cube.setAttribute("stroke", pal.frame);
-      cube.setAttribute("stroke-width", "4");
+      cube.setAttribute("stroke", pal.cubeStroke);
+      cube.setAttribute("stroke-width", String(strokeWidth));
       cubeGroup.appendChild(cube);
 
       const text = document.createElementNS(svgNs, "text");
       text.setAttribute("x", String(x + size / 2));
       text.setAttribute("y", String(y + size / 2));
-      text.setAttribute("dy", "5");
       text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "central");
       text.setAttribute("fill", pal.cubeText);
       text.setAttribute("font-size", String(Math.max(14, Math.round(size * 0.44))));
       text.setAttribute("font-weight", "bold");
@@ -1595,9 +1611,39 @@
         }
       }
       const normalizedHeight = Math.max(0, sourceStackHeight - 1);
-      const endBias = Math.min(0.62, Math.pow(normalizedHeight / 5, 1.35) * 0.62);
-      const cx = baseControlX + (to.x - midX) * endBias;
-      const cy = baseControlY + (to.y - midY) * endBias;
+      let endBias = Math.min(0.62, Math.pow(normalizedHeight / 5, 1.35) * 0.62);
+      const crossesBoardHalves = (from.y - centerY) * (to.y - centerY) < 0;
+      let targetStackHeight = 0;
+      if (toTargetId === "bar-top" || toTargetId === "bar-bottom") {
+        targetStackHeight = (toTargetId === "bar-top" ? barStacks.top.length : barStacks.bottom.length);
+      } else {
+        const toPointIndex = Number(toTargetId);
+        if (Number.isInteger(toPointIndex) && toPointIndex >= 0 && toPointIndex < pointStacks.length) {
+          targetStackHeight = pointStacks[toPointIndex].length;
+        }
+      }
+      let crossCurveDamping = 1;
+      let centerFocus = 0;
+      if (crossesBoardHalves) {
+        // For cross-half arrows, keep the tail cleaner near destination.
+        // Tall destination towers need even less horizontal pull at the endpoint.
+        // Tall source towers also require flatter curvature near start.
+        const sourceTallness = Math.max(0, sourceStackHeight - 1);
+        const targetTallness = Math.max(0, targetStackHeight - 1);
+        const crossHalfDamping = 0.45;
+        const tallSourceDamping = Math.max(0.34, 1 - sourceTallness * 0.11);
+        const tallTargetDamping = Math.max(0.4, 1 - targetTallness * 0.1);
+        crossCurveDamping = tallSourceDamping;
+        // For top-to-bottom transitions, keep bend nearer to the line middle.
+        centerFocus = Math.min(0.5, 0.22 + sourceTallness * 0.045);
+        endBias *= crossHalfDamping * tallTargetDamping * tallSourceDamping;
+      }
+      const adjustedBaseControlX = midX + (baseControlX - midX) * crossCurveDamping;
+      const adjustedBaseControlY = midY + (baseControlY - midY) * crossCurveDamping;
+      const centeredControlX = adjustedBaseControlX + (to.x - midX) * endBias;
+      const centeredControlY = adjustedBaseControlY + (to.y - midY) * endBias;
+      const cx = centeredControlX + (midX - centeredControlX) * centerFocus;
+      const cy = centeredControlY + (midY - centeredControlY) * centerFocus;
 
       return {
         from,
@@ -2632,6 +2678,7 @@
       const safeValue = Math.max(20, Math.min(getMaxScreenScale(), scaleValue));
       const width = (baseBoardWidth * safeValue) / 100;
       boardSvg.style.width = `${width}px`;
+      document.documentElement.style.setProperty("--board-panel-width", `${width}px`);
       currentBoardScale = safeValue;
     }
 
@@ -2653,7 +2700,7 @@
     function getInitialBoardScale() {
       const isMobile = window.matchMedia("(max-width: 768px)").matches;
       if (!isMobile) {
-        return 60;
+        return 50;
       }
       return getMaxScreenScale();
     }
