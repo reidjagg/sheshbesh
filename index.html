@@ -74,13 +74,43 @@
       .panel-modes .mode-btn,
       .panel-dice .mode-btn,
       .board-palette-chip {
-        flex: 0 0 auto;
-        min-width: unset;
+        width: 100% !important;
+        min-width: 0;
+      }
+
+      .actions--toolbar,
+      .actions--setup,
+      .panel-modes .row,
+      .panel-dice .row {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 4px;
+        width: 100%;
+        justify-items: stretch;
+        align-items: stretch;
+      }
+
+      .actions--toolbar > .ui-icon-btn,
+      .actions--toolbar > .board-palette-chip,
+      .actions--setup > .ui-icon-btn,
+      .panel-modes .row > .mode-btn,
+      .panel-dice .row > .ui-icon-btn {
+        grid-column: span 1;
+      }
+
+      .panel-dice .row > .value-chip--w2 {
+        grid-column: span 2;
+        width: 100% !important;
+      }
+
+      .actions--setup > .value-chip--w4 {
+        grid-column: span 4;
+        width: 100% !important;
       }
 
       .board-palette-wrap {
-        width: 100% !important;
-        height: 100% !important;
+        width: 100%;
+        height: 100%;
       }
 
       .board-palette-dropdown {
