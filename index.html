@@ -177,6 +177,16 @@
       line-height: var(--panel-line-height);
     }
 
+    .ui-icon-btn {
+      width: 48px;
+      height: 36px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
     .panel-dice {
       display: grid;
       gap: 4px;
@@ -272,12 +282,14 @@
     }
 
     .checker-icon {
-      width: 15px;
-      height: 15px;
+      --checker-icon-size: 15px;
+      width: var(--checker-icon-size);
+      height: var(--checker-icon-size);
       border-radius: 50%;
       border: 2px solid #222;
       display: inline-block;
       box-sizing: border-box;
+      position: relative;
     }
 
     .checker-icon--white {
@@ -288,6 +300,124 @@
     .checker-icon--black {
       background: var(--checker-black-bg, #0d0d14);
       border-color: var(--checker-black-bd, #e9c891);
+    }
+
+    .checker-icon--gray {
+      background: #9a9a9a;
+      border-color: #6f6f6f;
+    }
+
+    .checker-icon--erase {
+      background: #9a9a9a;
+      border-color: #6f6f6f;
+    }
+
+    .checker-icon--erase::before,
+    .checker-icon--erase::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 3px;
+      height: calc(var(--checker-icon-size) - 1px);
+      background: #d22;
+      border-radius: 1px;
+      transform-origin: center;
+    }
+
+    .checker-icon--erase::before {
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .checker-icon--erase::after {
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    .undo-icon-outline {
+      stroke: #082a72;
+      stroke-width: 4.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .undo-icon-main {
+      stroke: #2f77ff;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .line-draw-icon-path {
+      stroke: #7cc7ff;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .line-draw-icon-point {
+      fill: #7cc7ff;
+      stroke: #1e4a8a;
+      stroke-width: 1.2;
+    }
+
+    .cube-x2-icon-box {
+      fill: #4d6f3a;
+      stroke: #2c4e23;
+      stroke-width: 1.4;
+      rx: 2.5;
+      ry: 2.5;
+    }
+
+    .cube-x2-icon-text {
+      fill: #e8eaff;
+      font-size: 9px;
+      font-weight: 700;
+      font-family: Arial, Helvetica, sans-serif;
+      dominant-baseline: central;
+      text-anchor: middle;
+    }
+
+    .move-icon-overlap {
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      line-height: 1;
+    }
+
+    .move-icon-overlap .checker-icon {
+      margin-right: -5px;
+      z-index: 2;
+    }
+
+    .move-icon-hand-emoji {
+      position: relative;
+      z-index: 1;
+      font-size: 15px;
+      transform: translateY(0.5px);
+    }
+
+    .roll-icon-overlap {
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      line-height: 1;
+    }
+
+    .roll-icon-die {
+      position: relative;
+      z-index: 2;
+      margin-right: -5px;
+      transform: translateY(-0.5px);
+    }
+
+    .roll-icon-hand {
+      position: relative;
+      z-index: 1;
+      font-size: 15px;
+      transform: translateY(0.5px);
     }
 
     .hover-zone {
@@ -373,10 +503,17 @@
     .board-palette-wrap {
       position: relative;
       display: inline-block;
-      width: 26px;
-      height: 26px;
+      width: 100%;
+      height: 100%;
       vertical-align: middle;
       flex-shrink: 0;
+    }
+
+    .board-palette-chip {
+      width: 48px;
+      height: 36px;
+      padding: 0;
+      justify-content: center;
     }
 
     .board-palette-trigger {
@@ -386,7 +523,7 @@
       margin: 0;
       padding: 0;
       border: 1px solid var(--ui-input-border);
-      border-radius: 4px;
+      border-radius: 6px;
       background: var(--ui-chip-inner);
       cursor: pointer;
       position: relative;
@@ -400,8 +537,8 @@
 
     .board-palette-swatch {
       position: absolute;
-      inset: 1px;
-      border-radius: 3px;
+      inset: 6px 8px;
+      border-radius: 2px;
       box-sizing: border-box;
       pointer-events: none;
       background: linear-gradient(to right, #c9b797 50%, #ff4422 50%);
@@ -476,10 +613,10 @@
   </div>
 
   <div class="actions actions--toolbar" aria-label="Экспорт и вид доски">
-      <button id="exportPngBtn" type="button">💾</button>
-      <button id="flipBoardBtn" type="button">🔄</button>
-      <button id="zoomOutBtn" type="button">🔍</button>
-      <button id="zoomInBtn" type="button">🔎</button>
+      <button id="exportPngBtn" class="ui-icon-btn" type="button">💾</button>
+      <button id="flipBoardBtn" class="ui-icon-btn" type="button">🔄</button>
+      <button id="zoomOutBtn" class="ui-icon-btn" type="button">🔍</button>
+      <button id="zoomInBtn" class="ui-icon-btn" type="button">🔎</button>
       <div class="value-chip board-palette-chip">
         <div class="board-palette-wrap">
           <input type="hidden" id="boardPaletteKeyInput" value="classic" />
@@ -502,19 +639,36 @@
     </div>
 
     <div class="actions actions--setup" aria-label="Расстановка и отмена">
-      <button id="clearBtn" type="button">❌</button>
+      <button id="clearBtn" class="ui-icon-btn" type="button">💣</button>
       <button id="setupLongBtn" type="button">Длинные⚡</button>
       <button id="setupShortBtn" type="button">Короткие⚡</button>
-      <button id="backBtn" class="mode-btn" type="button">Вернуть↩️</button>
     </div>
 
     <div class="panel-modes" aria-label="Режимы редактирования">
       <div class="row">
-        <button id="modeMoveBtn" class="mode-btn active" type="button" data-mode="move">Ход 🖐️</button>
-        <button id="modeLinesBtn" class="mode-btn" type="button" data-mode="lines">◀︎━▶︎</button>
-        <button id="modeWhiteBtn" class="mode-btn" type="button" data-mode="white">++ <span class="checker-icon checker-icon--white"></span></button>
-        <button id="modeBlackBtn" class="mode-btn" type="button" data-mode="black">++ <span class="checker-icon checker-icon--black"></span></button>
-        <button id="modeDeleteBtn" class="mode-btn" type="button" data-mode="delete">Стереть🧽</button>
+        <button id="modeMoveBtn" class="mode-btn ui-icon-btn active" type="button" data-mode="move" aria-label="Ход" title="Ход">
+          <span class="move-icon-overlap">
+            <span class="checker-icon checker-icon--gray"></span><span class="move-icon-hand-emoji">👋</span>
+          </span>
+        </button>
+        <button id="modeLinesBtn" class="mode-btn ui-icon-btn" type="button" data-mode="lines" aria-label="Рисовать линии" title="Рисовать линии">
+          <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" focusable="false">
+            <path class="line-draw-icon-path" d="M2 11 C6 3, 12 3, 18 11"/>
+            <circle class="line-draw-icon-point" cx="2" cy="11" r="1.8"/>
+            <circle class="line-draw-icon-point" cx="18" cy="11" r="1.8"/>
+          </svg>
+        </button>
+        <button id="modeWhiteBtn" class="mode-btn ui-icon-btn" type="button" data-mode="white">+ <span class="checker-icon checker-icon--white"></span></button>
+        <button id="modeBlackBtn" class="mode-btn ui-icon-btn" type="button" data-mode="black">+ <span class="checker-icon checker-icon--black"></span></button>
+        <button id="modeDeleteBtn" class="mode-btn ui-icon-btn" type="button" data-mode="delete">− <span class="checker-icon checker-icon--erase"></span></button>
+        <button id="backBtn" class="mode-btn ui-icon-btn" type="button" aria-label="Вернуть" title="Вернуть">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="transform: translateX(-1px);">
+            <path class="undo-icon-outline" d="M10 7L5 12L10 17"/>
+            <path class="undo-icon-outline" d="M6 12H18C20.209 12 23 13.791 23 16"/>
+            <path class="undo-icon-main" d="M10 7L5 12L10 17"/>
+            <path class="undo-icon-main" d="M6 12H18C20.209 12 23 13.791 23 16"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -580,7 +734,11 @@
 
     <div class="panel-dice" aria-label="Куб удвоения и кости">
       <div class="row">
-        <label class="value-chip">Куб
+        <label class="value-chip">
+          <svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <rect class="cube-x2-icon-box" x="0.5" y="0.5" width="15" height="15" />
+            <text class="cube-x2-icon-text" x="8" y="8">x2</text>
+          </svg>
           <select id="cubeValueInput" class="control-like">
             <option value="0">0</option>
             <option value="1">1</option>
@@ -614,7 +772,11 @@
             <option value="6">6</option>
           </select>
         </label>
-        <button id="rollDiceBtn" class="mode-btn" type="button">🎲👋</button>
+        <button id="rollDiceBtn" class="mode-btn ui-icon-btn" type="button" aria-label="Бросок кубиков" title="Бросок кубиков">
+          <span class="roll-icon-overlap">
+            <span class="roll-icon-die">🎲</span><span class="roll-icon-hand">👋</span>
+          </span>
+        </button>
       </div>
     </div>
 
@@ -938,7 +1100,6 @@
     const soundRoll = createSoundPool(resolveBestSoundSrc("roll"), 3);
     const soundCheck = createSoundPool(resolveBestSoundSrc("capture"), 4);
     const soundMove = createSoundPool(resolveBestSoundSrc("move"), 4);
-    const soundBtn = createSoundPool(resolveBestSoundSrc("btn"), 3);
 
     const modeButtons = {
       white: document.getElementById("modeWhiteBtn"),
@@ -2079,14 +2240,12 @@
     function handleLinePoint(pointId) {
       if (lineStartPointIndex === null) {
         lineStartPointIndex = pointId;
-        playSound(soundBtn);
         renderBoard();
         return;
       }
 
       if (lineStartPointIndex === pointId) {
         lineStartPointIndex = null;
-        playSound(soundBtn);
         renderBoard();
         return;
       }
@@ -2100,7 +2259,6 @@
       arrows.push(arrow);
       recordEditAction({ type: "addArrow", arrow });
       lineStartPointIndex = null;
-      playSound(soundBtn);
       renderBoard();
     }
 
@@ -2976,7 +3134,6 @@
       void loadSoundBuffer(soundRoll);
       void loadSoundBuffer(soundCheck);
       void loadSoundBuffer(soundMove);
-      void loadSoundBuffer(soundBtn);
     }
 
     function playSoundViaHtmlAudio(sound) {
@@ -3297,25 +3454,6 @@
       } catch (_) {
         /* ignore */
       }
-    });
-    document.querySelectorAll("button").forEach((btn) => {
-      btn.addEventListener("pointerdown", (event) => {
-        if (event.button !== -1 && event.button !== 0) {
-          return;
-        }
-        if (btn === rollDiceBtn) {
-          return;
-        }
-        playSound(soundBtn);
-      }, { passive: true });
-    });
-    document.querySelectorAll("select").forEach((select) => {
-      select.addEventListener("pointerdown", (event) => {
-        if (event.button !== -1 && event.button !== 0) {
-          return;
-        }
-        playSound(soundBtn);
-      }, { passive: true });
     });
     document.addEventListener("mousedown", (event) => {
       if (!paletteMenuDropdown || paletteMenuDropdown.hidden) {
